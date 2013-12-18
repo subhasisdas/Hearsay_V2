@@ -1,0 +1,97 @@
+/*
+ * Keyboard event handler
+ * 
+ * listener
+ * {
+ * 	[void] onKeyPress: function([hsKeyboardHandler] handler, [String] pressed_button);
+ * }
+ * 
+ */
+
+/*hsKeyboardHandler*/ function hsCreateKeyboardHandler(/*Listener*/ listener)
+{
+
+	var consoleService = Components.classes["@mozilla.org/consoleservice;1"].getService(Components.interfaces.nsIConsoleService);
+
+	function log(msg) {	consoleService.logStringMessage(msg);	}
+	
+
+
+	/**
+	 * Gets the keycode of the keys pressed.
+	 * @param {Object} event     Event Type
+	 * @return toSpeak           Returns the keycode of the pressed Key
+	 */
+	function getHumanReadableKey(/*String*/ event)
+			{
+
+				//temporary local variable 
+				var tempSpeak = "";
+				if (event.ctrlKey == true)
+					tempSpeak += CTRL_KEY + "+";
+				if (event.shiftKey == true)
+					tempSpeak += SHIFT_KEY + "+";
+				if (event.altKey == true)
+					tempSpeak += ALT_KEY + "+";
+				/*if(iflag)
+					tempSpeak+=INS_KEY + "+";
+				if(mflag)
+					tempSpeak+="MacCommand+";*/
+
+				switch (event.keyCode) {
+				case KeyEvent.DOM_VK_SUBTRACT: //case for underscore
+					if(tempSpeak == SHIFT_KEY + "+")
+						tempSpeak = echoingMessages[event.keyCode];
+					break;
+
+				case KeyEvent.DOM_VK_INSERT: 
+					iflag=true;  //setting the flag if insert was pressed
+					break;
+				case KeyEvent.DOM_VK_META:
+					mflag=true;  //setting the flag if MAC key was pressed
+					break;
+				default:
+					var keyDescription = echoingMessages[event.keyCode];			
+				if(keyDescription == null) {
+					tempSpeak += String.fromCharCode(event.keyCode);
+				}
+				else
+					tempSpeak += keyDescription;
+				}
+				return tempSpeak;
+			}
+
+	
+	var keyBdListener ={
+
+			 /*void*/function(event)
+			{			
+				// TODO: add Event listeners for keyboard "press" event
+				log("key pressed! "+event);	
+				
+				listener.onKeyPress(keyBHandle,keyPress);
+			}
+
+	}
+	
+	log(" Registering the keyboard listener ");
+	//registering the keyboard listener
+	window.addEventListener("keypress", keyBdListener, false);
+	
+	window.onkeypress = kpress();
+
+	function kpress(/*event*/) {
+	 alert("[hs_keyboard] :keypress event detected!");
+	}
+
+	var keyBHandle =
+	{
+			release: /*void*/ function()
+			{
+				// TODO: release listeners
+				log("release listeners");
+				window.removeEventListener("keypress", keyBdListener ,false);
+			}
+	};
+	return keyBHandle;
+}

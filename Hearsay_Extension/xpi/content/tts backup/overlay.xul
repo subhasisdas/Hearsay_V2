@@ -1,0 +1,29 @@
+<?xml version="1.0"?> 
+<?xml-stylesheet href="chrome://Hearsay_Extension/skin/overlay.css" type="text/css"?> 
+<!DOCTYPE overlay SYSTEM "chrome://Hearsay_Extension/locale/overlay.dtd"> 
+<overlay id="Hearsay_Extension-overlay" 
+    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"> 
+  <script src="hs_message.js"/> 
+  <script src="hs_transport.js"/>
+  <script src="hs_tts.js"/> 
+  	
+  <script type="application/x-javascript" src="speakGenerator.js" />
+  <script type="application/x-javascript" src="hs_tts.js" />
+  <toolbox id="navigator-toolbox">
+    <toolbar id="webTTSToolbar" toolbarname="WebTTS Toolbar" accesskey="T"
+             class="chromeclass-toolbar" context="toolbar-context-menu" 
+             hidden="false" persist="hidden">
+       		<toolbarbutton id="speak" label="Speak" />
+
+       		<toolbarbutton id="cancel" label="Cancel" />
+       		
+       		<toolbarbutton id="release" label="Release" />
+	</toolbar>
+  </toolbox>
+
+  <menupopup id="menu_ToolsPopup">
+   <menuitem label="Connect..." oncommand="Hearsay_Extension.onConnect()"/>
+    <menuitem label="Disconnect..." oncommand="Hearsay_Extension.onDisconnect()"/>
+    <menuitem label="Send..." oncommand="Hearsay_Extension.onSend();"/> 
+  </menupopup> 
+</overlay> 
