@@ -32,13 +32,13 @@ import org.xml.sax.InputSource;
 public class Message
 {
 	public final MessageType type;
-	
+
 	public final long tabId;
 
 	private final Map<String, List<String>> arguments = new HashMap<String, List<String>>();
 
 	public Node payload;
-	
+
 	public Message(MessageType t, long id)
 	{
 		type = t;
@@ -91,43 +91,45 @@ public class Message
 			}
 		}
 		Node parameters = xmlDocument.getElementsByTagName("parameters").item(0);
-		System.out.println("Parameter length : " + parameters.getChildNodes().getLength());
+		//System.out.println("Parameter length : " + parameters.getChildNodes().getLength());
 		if(parameters.getNodeType() == Node.ELEMENT_NODE)
 		{
-			System.out.println("Of type Element Node");
 			Element parametersElement = (Element) parameters;
 			NodeList parameterList = parametersElement.getElementsByTagName("parameter");
-			int index = 0;
-			while(index < parameterList.getLength())
+			if(parameterList != null)
 			{
-				Element eParameter = (Element) parameterList.item(index);
-				NodeList parameterNameNodes = eParameter.getElementsByTagName("parameterName");
-				if(parameterNameNodes.getLength() > 1 || parameterNameNodes.getLength() < 1)
+				int index = 0;
+				while(index < parameterList.getLength())
 				{
-					throw new Exception("Node for parameter name not found");
+					Element eParameter = (Element) parameterList.item(index);
+					NodeList parameterNameNodes = eParameter.getElementsByTagName("parameterName");
+					if(parameterNameNodes.getLength() > 1 || parameterNameNodes.getLength() < 1)
+					{
+						throw new Exception("Node for parameter name not found");
+					}
+					String parameterName = parameterNameNodes.item(0).getTextContent();
+					NodeList parameterValuesNodeList = eParameter.getElementsByTagName("parameterValues");
+					if(parameterValuesNodeList.getLength() > 1 || parameterValuesNodeList.getLength() < 1)
+					{
+						throw new Exception("Node for parameter name not found");
+					}
+					Element parameterValues = (Element)parameterValuesNodeList.item(0);
+					NodeList parameterValueNodeList = parameterValues.getElementsByTagName("parameterValue");
+					int iterator = 0;
+					int parameterValueCount = parameterValueNodeList.getLength();
+					ArrayList<String> parameterValueList = new ArrayList<String>();
+					while(iterator < parameterValueCount)
+					{
+						Element parameterValue = (Element)parameterValueNodeList.item(iterator);
+						parameterValueList.add(parameterValue.getTextContent());
+						iterator++;
+					}
+					if(message != null)
+					{
+						message.getArguments().put(parameterName, parameterValueList);
+					}
+					index++;
 				}
-				String parameterName = parameterNameNodes.item(0).getTextContent();
-				NodeList parameterValuesNodeList = eParameter.getElementsByTagName("parameterValues");
-				if(parameterValuesNodeList.getLength() > 1 || parameterValuesNodeList.getLength() < 1)
-				{
-					throw new Exception("Node for parameter name not found");
-				}
-				Element parameterValues = (Element)parameterValuesNodeList.item(0);
-				NodeList parameterValueNodeList = parameterValues.getElementsByTagName("parameterValue");
-				int iterator = 0;
-				int parameterValueCount = parameterValueNodeList.getLength();
-				ArrayList<String> parameterValueList = new ArrayList<String>();
-				while(iterator < parameterValueCount)
-				{
-					Element parameterValue = (Element)parameterValueNodeList.item(iterator);
-					parameterValueList.add(parameterValue.getTextContent());
-					iterator++;
-				}
-				if(message != null)
-				{
-					message.getArguments().put(parameterName, parameterValueList);
-				}
-				index++;
 			}
 		}
 		return message;
@@ -135,10 +137,12 @@ public class Message
 
 	public static Message parseXML(String hearsayMessage) throws Exception
 	{
-		final DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 		InputSource is = new InputSource();
 		is.setCharacterStream(new StringReader(hearsayMessage));
-		return parseDocument(factory.newDocumentBuilder().parse(is));
+		DocumentBuilder builder = factory.newDocumentBuilder();
+		Document xmlDoc = builder.parse(is);
+		return parseDocument(xmlDoc);
 	}
 
 	public String writeXML() throws Exception
@@ -160,7 +164,7 @@ public class Message
 		Text typeValue = hearsayXMLMessage.createTextNode(this.type.toString());
 		type.appendChild(typeValue);
 		hearsayMessage.appendChild(type);
-		
+
 		//Add the parameters
 		Element parameters = hearsayXMLMessage.createElement("parameters");
 		for(Map.Entry<String, List<String>> parameter : arguments.entrySet())
@@ -188,7 +192,7 @@ public class Message
 			parameters.appendChild(parameterElement);
 		}
 		hearsayMessage.appendChild(parameters);
-		
+
 		//Clone the payload if there is one
 		if(payload != null)
 		{

@@ -38,7 +38,7 @@ public class Dispatcher extends Loggable implements ICommunicatorListener, IChan
 			channel = channels.put(channel.getId(), channel);
 			if(channel!=null)	// previous channel with the same port? a little strange but...
 				channel.release();
-		} 
+		}
 		catch (SocketException e) 
 		{
 			log(1, "A SocketException : " + e.getMessage() + " was encountered when creating a new message channel for connection to : " + socket.getRemoteSocketAddress().toString());	
@@ -48,6 +48,7 @@ public class Dispatcher extends Loggable implements ICommunicatorListener, IChan
 	
 	public void release()
 	{
+		System.out.println("Release was invoked");
 		for(ITabHandler tabHandler : tabs.values())
 		{
 				tabHandler.release();
@@ -63,6 +64,7 @@ public class Dispatcher extends Loggable implements ICommunicatorListener, IChan
 	@Override
 	public synchronized void onDisconnect(IMessageChannel sp) 
 	{
+		System.out.println("onDisconnect was invoked");
 		channels.remove(sp.getId());
 		//Prepare the list of tabs that must be removed
 		List<Long> tabsToRemove = new ArrayList<Long>();
@@ -87,7 +89,7 @@ public class Dispatcher extends Loggable implements ICommunicatorListener, IChan
 	}
 
 	@Override
-	public synchronized void onReceive(IMessageChannel sp, Message msg)
+	public synchronized void onReceive(IMessageChannel sp, Message msg) throws Exception
 	{
 		System.out.println("The mesasge that has been received is : " + msg);
 		System.out.println("Current state of tabs is : " + tabs.toString());
@@ -97,6 +99,16 @@ public class Dispatcher extends Loggable implements ICommunicatorListener, IChan
 		{
 			// Will be processed by active tab. if tabID of the message is the same. Otherwise ignore it
 			case KEY:		// Parameters: "press": a pressed key name. This message will be sent with active tab
+				//Sending TTS_SPEAK to extension
+				Message ttsSpeakMessage = new Message(MessageType.TTS_SPEAK, msg.tabId);
+				String keyPressed = msg.getArguments().get("press").get(0);
+				ArrayList<String> textToSpeak = new ArrayList<String>();
+				textToSpeak.add(keyPressed);
+				ArrayList<String> textIdParameter = new ArrayList<String>();
+				textIdParameter.add(Long.toString(globalTabId));
+				ttsSpeakMessage.getArguments().put("text", textToSpeak);
+				ttsSpeakMessage.getArguments().put("text_id", textIdParameter);
+				sp.send(ttsSpeakMessage);
 			case MOUSE:			// Parameters: "id" - clicked node id, extra parameters - pressed mouse button state. 
 			case FOCUS:			// Parameters: "id" - new currently selected node by browser.
 			case TTS_DONE:	// parameters: "text_id" - text with text_id has been spoken.
@@ -128,10 +140,17 @@ public class Dispatcher extends Loggable implements ICommunicatorListener, IChan
 				break;
 			case ACTIVE_TAB:		// Parameters: none. Will be sent when tab switch happend.
 				// deactivate active tab; cancel current speech, activate tab with globalTabId
+				if(activeTab != null && activeTab.getGlobalId() == globalTabId)
+				{
+					break;
+				}
 				ITabHandler newActiveTab = tabs.get(globalTabId);
 				if(newActiveTab != null && newActiveTab != activeTab)
 				{
-					activeTab.deactivate();
+					if(activeTab != null)
+					{
+						activeTab.deactivate();
+					}
 					activeTab = newActiveTab;
 					activeTab.activate();
 				}

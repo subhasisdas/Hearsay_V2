@@ -84,10 +84,10 @@ public class TabHandler implements ITabHandler
 					iterator = new DomIterator(this);
 					iterator.begin();
 					//Sending TTS_SPEAK to extension
-					Message ttsSpeakMessage = new Message(MessageType.TTS_SPEAK, tabId);
-					ttsSpeakMessage.getArguments().put("text", new ArrayList<String>() {{add(iterator.getPos().getNodeValue());}});
-					ttsSpeakMessage.getArguments().put("text_id", new ArrayList<String>() {{add(String.valueOf(channel.getNextTextId()));}});
-					channel.send(ttsSpeakMessage);
+					//Message ttsSpeakMessage = new Message(MessageType.TTS_SPEAK, tabId);
+					//ttsSpeakMessage.getArguments().put("text", new ArrayList<String>() {{add(iterator.getPos().getNodeValue());}});
+					//ttsSpeakMessage.getArguments().put("text_id", new ArrayList<String>() {{add(String.valueOf(channel.getNextTextId()));}});
+					//channel.send(ttsSpeakMessage);
 				}
 				else
 				{
@@ -150,6 +150,7 @@ public class TabHandler implements ITabHandler
 	@Override
 	public synchronized void activate() 
 	{
+		System.out.println("Activate tab : " + tabId);
 		if(active)
 			return;
 		active = true;
@@ -159,6 +160,7 @@ public class TabHandler implements ITabHandler
 	@Override
 	public void deactivate() 
 	{
+		System.out.println("Deactivate tab : " + tabId);
 		if(!active)
 			return;
 		active = false;

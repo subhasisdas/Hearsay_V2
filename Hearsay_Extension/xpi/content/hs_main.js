@@ -6,133 +6,151 @@
  * 	hs_message.js
  */
 
-(function()
-{
-// services, such as console output
-// internal variables
-	var transport = null;
-	var keyboard = null;
-	var mouse = null;
-	var tts = null;
-	var newTabId;
-	var tabMap = {};	// map tabId: tab
-	var activeTabBrowser = null;
-	var consoleService = Components.classes["@mozilla.org/consoleservice;1"].getService(Components.interfaces.nsIConsoleService);
+//services, such as console output
+//internal variables
+var transport = null;
+var keyboard = null;
+var mouse = null;
+var tts = null;
+var newTabId;
+var tabMap = {};	// map tabId: tab
+var activeTabBrowserHandler = null;
+var consoleService = Components.classes["@mozilla.org/consoleservice;1"].getService(Components.interfaces.nsIConsoleService);
 
-	function log(msg) {	consoleService.logStringMessage("main] "+msg);	}
-	
-	function getTabId(/*Browser*/ br)
+function log(msg) {	consoleService.logStringMessage("main] "+msg);	}
+
+function getTabId(/*Browser*/ br)
+{
+	for(var tabId in tabMap)
 	{
-		var tabIdForBrowser;
-		for(var tabId in tabMap)
-		{
-			if(tabMap[tabId].getBrowser() == br)
-			{
-				tabIdForBrowser = tabId;
-			}
-		}
-		return tabIdForBrowser;
+		log('Check for tabId : ' + tabId);
+		if(tabMap[tabId].getBrowser() == br)
+			return tabId;
 	}
-	
-	function processNewTab(/*int*/ newTabId, /*Browser*/ browser)
+	return null;
+}
+
+function ignoreCheckFunction(/*Node*/ node)
+{
+	if(node.nodeName == 'SCRIPT' || node.nodeName == 'script')
 	{
-		newTabMessage = hsMessage.create(hsMsgType.NEW_TAB, newTabId);
-		//transport.send(newTabMessage.toXMLString());
-		browserHandler = hsCreateBrowserHandler(browser, listener);
-		tabMap[newTabId] = browserHandler;
+		return true;
 	}
-	
-	//Tab events
-	function onTabAdded(event)
+	else
+	{
+		return false;
+	}
+}
+
+function processNewTab(/*int*/ newTabId, /*Browser*/ browser)
+{
+	log('Sending NEW_TAB message');
+	var newTabMessage = hsMessage.create(hsMsgType.NEW_TAB, newTabId);
+	transport.send(newTabMessage.toXMLString());
+	tabMap[newTabId] = hsCreateBrowserHandler(browser, listener, newTabId, ignoreCheckFunction);
+}
+
+//Tab events
+function onTabAdded(event)
+{
+	try
 	{
 		var browser = gBrowser.getBrowserForTab(event.target);
 		processNewTab(newTabId, browser);
 		newTabId++;
 	}
+	catch(ex)
+	{
+		log(ex);
+	}
+}
 
-	function onTabRemoved(event)
+function onTabRemoved(event)
+{
+	log('A tab was removed');
+	var removedTabBrowser = gBrowser.getBrowserForTab(event.target);
+	var tabRemovedId = getTabId(removedTabBrowser);
+	var activeTabBrowser = gBrowser.getBrowserForTab(gBrowser.selectedTab);
+	var newActiveTabId = getTabId(activeTabBrowser);
+	if(tabRemovedId)
 	{
-		log('A tab was removed');
-		var removedTabBrowser = gBrowser.getBrowserForTab(event.target);
-		var tabRemovedId;
-		activeTabBrowser = gBrowser.getBrowserForTab(gBrowser.selectedTab);
-		for(var tabId in tabMap)
+		tabMap[tabRemovedId].release();
+		delete tabMap[tabRemovedId];
+		var m = hsMessage.create(hsMsgType.DELETE_TAB, tabRemovedId);
+		transport.send(m.toXMLString());
+	}
+	if(newActiveTabId)
+	{
+		activeTabBrowserHandler = tabMap[newActiveTabId];
+		if(activeTabBrowserHandler)
 		{
-			if(tabMap[tabId].getBrowser() == removedTabBrowser)
-			{
-				tabRemovedId = tabId;
-			}
-		}
-		if(tabRemovedId)
-		{
-			tabMap[tabRemovedId].release();
-			delete tabMap[tabRemovedId];
-			removedTabMessage = hsMessage.create(hsMsgType.DELETE_TAB, tabRemovedId);
-			//transport.send(removedTabMessage.toXMLString());
-		}
-		if(activeTabBrowser)
-		{
-			var newActiveTabId = getActiveTabId();
-			if(newActiveTabId)
-			{
-				activeTabMessage = hsMessage.create(hsMsgType.ACTIVE_TAB, newActiveTabId);
-				//transport.send(activeTabMessage.toXMLString());
-			}
+			var activeTabMessage = hsMessage.create(hsMsgType.ACTIVE_TAB, newActiveTabId);
+			transport.send(activeTabMessage.toXMLString());
 		}
 	}
+}
 
-	function onTabActivated(event)
+function onTabActivated(event)
+{
+	log('A tab has been selected / activated');
+	var activeTabBrowser = gBrowser.getBrowserForTab(gBrowser.selectedTab);
+	var newActiveTabId = getTabId(activeTabBrowser);
+	if(newActiveTabId)
 	{
-		log('A tab has just been selected / activated');
-		activeTabBrowser = gBrowser.getBrowserForTab(gBrowser.selectedTab);
-		var newActiveTabId = getTabId(activeTabBrowser);
-		if(newActiveTabId)
-		{
-			activeTabMessage = hsMessage.create(hsMsgType.ACTIVE_TAB, newActiveTabId);
-			//transport.send(activeTabMessage.toXMLString());
-		}
+		activeTabBrowserHandler = tabMap[newActiveTabId];
+		var activeTabMessage = hsMessage.create(hsMsgType.ACTIVE_TAB, newActiveTabId);
+		transport.send(activeTabMessage.toXMLString());
 	}
-	
-	/**
-	 * Invoked from the listener's onConnect implementation
-	 */
-	function enumerateExistingTabs(/*tabbrowser*/ gBrowser)
+}
+
+/**
+ * Invoked from the listener's onConnect implementation
+ */
+function enumerateExistingTabs(/*tabbrowser*/ gBrowser)
+{
+	var numberOfTabs = gBrowser.browsers.length;
+	for(var index = 0; index < numberOfTabs; index++)
 	{
-		var numberOfTabs = gBrowser.browsers.length;
-		for(var index = 0; index < numberOfTabs; index++)
-		{
-			var currentTab = gBrowser.tabContainer.childNodes[index];
-			var currentBrowser = gBrowser.getBrowserForTab(currentTab);
-			processNewTab(newTabId, currentBrowser);
-			newTabId++;
-		}
+		var currentTab = gBrowser.tabContainer.childNodes[index];
+		var currentBrowser = gBrowser.getBrowserForTab(currentTab);
+		processNewTab(newTabId, currentBrowser);
+		newTabId++;
 	}
-	
-	var listener =
-	{
+}
+
+var listener =
+{
 		// transport events ----------------------------------------------------------------------
 		onConnect: 		/*void*/function(/*hsTransport*/ handle) 
 		{
+			log('onConnect on listener in main was invoked');
 			newTabId = 1;
+			log('onConnect 1');
 			// Initialize keyboard, mouse and tts components
 			log("initializing the handlers");
 			tts = hsCreateTTS(listener);
 			mouse = hsCreateMouseHandler(listener);
 			keyboard = hsCreateKeyboardHandler(listener);	
 			log("handlers created");
-			
-			var activeTabId;
+						
 			//enumerate already existed tabs and send INIT_DOMs
 			enumerateExistingTabs(gBrowser);
+			log('onConnect 2');
 			if(gBrowser.selectedTab)
 			{
+				log('onConnect 3');
 				//Set the active tab and send the ACTIVE_TAB message to server
-				activeTabId = getTabId(gBrowser.getBrowserForTab(gBrowser.selectedTab));
+				var activeTabId = getTabId(gBrowser.getBrowserForTab(gBrowser.selectedTab));
+				log('onConnect 4');
 				if(activeTabId)
 				{
-					activeTab = tabMap[activeTabId];
-					activeTabMessage = hsMessage.create(hsMsgType.ACTIVE_TAB, activeTabId);
-					//transport.send(activeTabMessage.toXMLString());
+					log('onConnect 5');
+					activeTabBrowserHandler = tabMap[activeTabId];
+					log('onConnect 6');
+					var activeTabMessage = hsMessage.create(hsMsgType.ACTIVE_TAB, activeTabId);
+					log('onConnect 7');
+					transport.send(activeTabMessage.toXMLString());
+					log('onConnect 8');
 				}
 			}
 			// set eventListeners for gBrowser events for new tab, delete tab, and active tab
@@ -143,7 +161,6 @@
 		},
 		onDisconnect:	/*void*/function(/*hsTransport*/ handle) 
 		{	
-			log("onDisconnect!");
 			if(keyboard)
 			{
 				keyboard.release();
@@ -156,7 +173,7 @@
 			}
 			if(tts)
 			{
-				//tts.release();
+				tts.release();
 				tts = null;
 			}
 			if(tabMap)
@@ -189,11 +206,7 @@
 				}
 				break;
 			case hsMsgType.TTS_CANCEL:
-				var text_id = msg.getParameter("text_id");
-				text_id = text_id && text_id.length>0 && text_id[0];
-				tts.cancel(text_id);
 				// TODO: implement it
-				//sdas:done
 				break;
 			case hsMsgType.SET_HIGHLIGHT:
 				var tab = tabMap[msg.getId()];
@@ -201,7 +214,6 @@
 					tab.setHightLight(msg.getParameter("node_id"));
 				break;
 			default:
-				log("in Default");
 				// TODO: print error message to console with message description
 			}
 		},
@@ -215,14 +227,18 @@
 		onKeyPress: /*void*/function(/*keybHandler*/keyboard, /*String*/key)
 		{
 			// TODO: send hsMsgType.KEY message
+			// TODO: send hsMsgType.KEY message
 			log(" onKeyPress message sent!"+ key);
 			//tts.speak(key,1);
-			if(activeTab)
+			
+			var activeTabId =  getTabId(gBrowser.getBrowserForTab(gBrowser.selectedTab));
+			if(activeTabId)
 			{
 				log(" onKeyPress message sent!");
-				var msg = hsMessage.create(hsMsgType.KEY, activeTab.getId());
-				msg.setParameter("press", [key]);
-				transport.send(msg.toXMLString());
+				var activeTabMessage = hsMessage.create(hsMsgType.KEY, activeTabId);
+				activeTabMessage.setParameter("press", [key]);
+				//log("msg sent is :"+activeTabMessage.toXMLString())
+				transport.send(activeTabMessage.toXMLString());
 				
 			}
 		},
@@ -230,12 +246,14 @@
 		{
 			log(" onClick message sent!"+ button);
 			//tts.speak("click",1);
-			if(activeTab)
+			var activeTabId =  getTabId(gBrowser.getBrowserForTab(gBrowser.selectedTab));
+			if(activeTabId)
 			{
 				log("onClick message sent!");
-				var msg = hsMessage.create(hsMsgType.MOUSE, activeTab.getId());
-				msg.setParameter("click", [button]);
-				transport.send(msg.toXMLString());
+				var activeTabMessage = hsMessage.create(hsMsgType.MOUSE, activeTabId);
+				activeTabMessage.setParameter("click", [button]);
+				//log("msg sent is :"+activeTabMessage.toXMLString())
+				transport.send(activeTabMessage.toXMLString());
 				//log("onClick message sent!"+ msg.toXMLString());
 			}
 		},
@@ -243,52 +261,44 @@
 		// TODO: implement it
 		// onDOMUpdate,
 		// onDOMDelete,
-		onDOMInit: /*void*/function(/*hsBrowserHandler*/ handler, /*Node*/ xml_dom)
+		onDOMInit: /*void*/function(/*hsBrowserHandler*/ handler, /*Node*/ xml_dom, /*long*/ tabId)
 		{
-			var relevantTabId = getTabId(handler.getBrowser());
-			if(relevantTabId)
+			log('onDOMInit invoked : ' + handler.getBrowser());
+			//var relevantTabId = getTabId(handler.getBrowser());
+			log("Tab id is : " + tabId);
+			if(tabId)
 			{
-				initDOMMessage = hsMessage.create(hsMsgType.INIT_DOM, relevantTabId);
-				initDOMMessage.setParameter("URL", [document.url]);
+				var initDOMMessage = hsMessage.create(hsMsgType.INIT_DOM, tabId);
+				initDOMMessage.setParameter("URL", [handler.getBrowser().contentDocument.URL]);
 				initDOMMessage.setPayload(xml_dom);
-				//transport.send(initDOMMessage.toXMLString());
+				log(initDOMMessage.toXMLString());
+				transport.send(initDOMMessage.toXMLString());
 			}
 		},
 		// onDOMMove,
 		// onDOMAttrChange,
 		// onDOMAttrDelete,
 		// onValueChange
-	};
-	
-	function onLoad()
-	{
-		window.removeEventListener("load", onLoad, false);
-		window.addEventListener("unload", onUnload, false);
-		
-		log("Listener onConnect");
-		//COmment out to test just the Javascript functionality
-		//listener.onConnect(null);
+};
 
-		
-		//transport = hsCreateTransport("localhost", /*port*/13000, /*TransportListener*/listener);
-		log("transport initiated");
-		
-	}
+function onLoad()
+{
+	window.removeEventListener("load", onLoad, false);
+	window.addEventListener("unload", onUnload, false);
+	transport = hsCreateTransport("localhost", /*port*/13000, /*TransportListener*/listener);
+	log("transport initiated");
+}
 
-	// do not forget to release all resources!
-	function onUnload()
-	{
-		window.removeEventListener("unload", onUnload, false);
-		
-		// TODO: release all: transport, mouse, keyboard, listeners ....
-		//transport.release();
-		mouse.release();
-		keyboard.release();
-		tts.release();
-	
-	}
-	
-	// TODO: add gBrowser event listeners
-	
-	window.addEventListener("load", onLoad, false);
-})();
+// do not forget to release all resources!
+function onUnload()
+{
+	window.removeEventListener("unload", onUnload, false);
+	transport.release();
+	// TODO: release all: transport, mouse, keyboard, listeners ....
+	mouse.release();
+	keyboard.release();
+	tts.release();
+}
+
+// TODO: add gBrowser event listeners
+window.addEventListener("load", onLoad, false);

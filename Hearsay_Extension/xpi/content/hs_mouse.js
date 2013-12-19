@@ -19,7 +19,7 @@
 				// TODO: add Event listeners for mouse "click" event
 				log("[mouseHandler]: click");
 				clickEventString = String.fromCharCode(event.charCode);
-				listener.onClick(mHandler,null,clickEventString);
+				listener.onClick(mHandler,null,"click");
 			};
 
 

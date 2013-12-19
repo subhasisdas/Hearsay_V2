@@ -44,7 +44,7 @@ public class MessageChannel extends server.Loggable implements IMessageChannel
 					for(;;)  
 					{
 						final String message = receiveMessage();
-	
+						System.out.println("Received message : " + message);
 						if(message == null)
 							break;
 	
@@ -59,6 +59,8 @@ public class MessageChannel extends server.Loggable implements IMessageChannel
 				} 
 				catch (Exception e) 
 				{
+					System.out.println("An error was encountered when parsing the message received from extension : " + e.getLocalizedMessage());
+					e.printStackTrace();
 					log(1, "An error was encountered when parsing the message received from extension : " + e.getMessage());
 				}
 				// notify event listeners that socket was closed (possibly without notification)

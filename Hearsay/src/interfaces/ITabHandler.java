@@ -1,7 +1,5 @@
 package interfaces;
 
-import javax.xml.parsers.ParserConfigurationException;
-
 import org.w3c.dom.Node;
 
 import server.Message;

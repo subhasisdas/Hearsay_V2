@@ -43,14 +43,15 @@ var hsMessage = (function()
 					var typeNode = xmldoc.createElement(HS_MSG_TYPE);
 					typeNode.appendChild(xmldoc.createTextNode(type));
 					xmlroot.appendChild(typeNode);
-					var parameters = xmldoc.createElement(HS_PARAMETERS);
-					for(parameterName in this.parameters)
+					var parametersElement = xmldoc.createElement(HS_PARAMETERS);
+					for(parameterName in parameters)
 					{
+						log('Parameter :  ' + parameterName);
 						var parameter = xmldoc.createElement(HS_PARAMETER);
 						var parameterNameNode = xmldoc.createElement(HS_PARAMETER_NAME);
 						parameterNameNode.appendChild(xmldoc.createTextNode(parameterName));
 						var parameterValues = xmldoc.createElement(HS_PARAMETER_VALUES);
-						var valuesList = this.parameters[parameterName];
+						var valuesList = parameters[parameterName];
 						for(valueIndex = 0; valueIndex < valuesList.length; valueIndex++)
 						{
 							var parameterValue = xmldoc.createElement(HS_PARAMETER_VALUE);
@@ -59,9 +60,9 @@ var hsMessage = (function()
 						}
 						parameter.appendChild(parameterNameNode);
 						parameter.appendChild(parameterValues);
-						parameters.appendChild(parameter);
+						parametersElement.appendChild(parameter);
 					}
-					xmlroot.appendChild(parameters);
+					xmlroot.appendChild(parametersElement);
 					//Append the payload if a valid payload exists
 					if(payload && payload instanceof Object)
 					{

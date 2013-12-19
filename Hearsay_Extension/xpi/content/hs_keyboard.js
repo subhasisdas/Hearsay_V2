@@ -111,14 +111,14 @@
 	var keyBdListener =	 /*void*/function(event)
 	{			
 		// TODO: add Event listeners for keyboard "press" event
-		var tempSpeak = "";
+		var tempSpeak="";
 
 		if (event.ctrlKey == true)
-			tempSpeak += " control " ;
+			tempSpeak += "control" ;
 		if (event.shiftKey == true)
-			tempSpeak += " shift " ;
+			tempSpeak += "shift" ;
 		if (event.altKey == true)
-			tempSpeak += " alt " ;
+			tempSpeak += "alt" ;
 
 		/*//this doesnot work
 		if (echoingMessages[event.keyCode] == 'Shift')
@@ -130,25 +130,26 @@
 		*/
 
 		if (echoingMessages[event.keyCode] == 'Enter')
-			tempSpeak += " Enter";
-		if (echoingMessages[event.keyCode] == 'Left')
-			tempSpeak += " Left ";
-		if (echoingMessages[event.keyCode] == 'Up')
-			tempSpeak += " Up ";
-		if (echoingMessages[event.keyCode] == 'Down')
-			tempSpeak += " Down ";
-		if (echoingMessages[event.keyCode] == 'Backspace')
-			tempSpeak += " back space";
-		if (echoingMessages[event.keyCode] == 'Right')
-			tempSpeak += " Right ";
-		if (echoingMessages[event.keyCode] == 'Delete')
-			tempSpeak += " Delete ";
-		if (echoingMessages[event.keyCode] == 'Home')
-			tempSpeak += " Home ";
-		if (echoingMessages[event.keyCode] == 'End')
-			tempSpeak += " End ";
-
-		tempSpeak += String.fromCharCode(event.charCode);
+			tempSpeak = "Enter" ;
+		else if (echoingMessages[event.keyCode] == 'Left')
+			tempSpeak = "Left" ;
+		else if (echoingMessages[event.keyCode] == 'Up')
+			tempSpeak = "Up" ;
+		else if (echoingMessages[event.keyCode] == 'Down')
+			tempSpeak = "Down" ;
+		else if (echoingMessages[event.keyCode] == 'Backspace')
+			tempSpeak = "backspace" ;
+		else if (echoingMessages[event.keyCode] == 'Right')
+			tempSpeak = "Right" ;
+		else if (echoingMessages[event.keyCode] == 'Delete')
+			tempSpeak = "Delete" ;
+		else if (echoingMessages[event.keyCode] == 'Home')
+			tempSpeak = "Home" ;
+		else if (echoingMessages[event.keyCode] == 'End')
+			tempSpeak = "End" ;
+		else
+			tempSpeak += String.fromCharCode(event.charCode);
+		
 		log("key pressed! "+tempSpeak);
 		listener.onKeyPress(keyBHandle,tempSpeak);
 	};
