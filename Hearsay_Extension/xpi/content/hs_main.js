@@ -216,28 +216,28 @@
 		{
 			// TODO: send hsMsgType.KEY message
 			log(" onKeyPress message sent!"+ key);
-			tts.speak(key,1);
-			/*if(activeTab)
+			//tts.speak(key,1);
+			if(activeTab)
 			{
 				log(" onKeyPress message sent!");
 				var msg = hsMessage.create(hsMsgType.KEY, activeTab.getId());
 				msg.setParameter("press", [key]);
 				transport.send(msg.toXMLString());
 				
-			}*/
+			}
 		},
 		onClick : /*void*/function(/*[hsMouseHandler]*/ mouse, /*[Node]*/ clicked_node, /*[String]*/ button)
 		{
 			log(" onClick message sent!"+ button);
-			tts.speak("click",1);
-			/*if(activeTab)
+			//tts.speak("click",1);
+			if(activeTab)
 			{
 				log("onClick message sent!");
 				var msg = hsMessage.create(hsMsgType.MOUSE, activeTab.getId());
 				msg.setParameter("click", [button]);
 				transport.send(msg.toXMLString());
 				//log("onClick message sent!"+ msg.toXMLString());
-			}*/
+			}
 		},
 		// DOM events observer
 		// TODO: implement it
@@ -266,11 +266,13 @@
 		window.addEventListener("unload", onUnload, false);
 		
 		log("Listener onConnect");
-		listener.onConnect(null);
+		//COmment out to test just the Javascript functionality
+		//listener.onConnect(null);
 
+		
 		//transport = hsCreateTransport("localhost", /*port*/13000, /*TransportListener*/listener);
 		log("transport initiated");
-		//log(transport);
+		
 	}
 
 	// do not forget to release all resources!

@@ -16,10 +16,10 @@
 	function log(msg) {	consoleService.logStringMessage(msg);	}
 
 
-	 //adopted from echoing.js
-	 //**
-	 // This object defines the text to be spoken out on echoing
-	 //*
+	//adopted from echoing.js
+	//**
+	// This object defines the text to be spoken out on echoing
+	//*
 	var echoingMessages = {};  // TODO: externalize the textual content for language support
 	echoingMessages[KeyEvent.DOM_VK_F1]='F1';
 	echoingMessages[KeyEvent.DOM_VK_F2]='F2';
@@ -52,7 +52,10 @@
 	echoingMessages[KeyEvent.DOM_VK_SUBTRACT]='Underscore';
 	echoingMessages[KeyEvent.DOM_VK_PAGE_UP]='PageUp';
 	echoingMessages[KeyEvent.DOM_VK_PAGE_DOWN]='PageDown';
-
+	echoingMessages[KeyEvent.DOM_VK_SHIFT]='Shift';
+	echoingMessages[KeyEvent.DOM_VK_CONTROL]='Control';
+	echoingMessages[KeyEvent.DOM_VK_ALT]='Alt';
+	echoingMessages[KeyEvent.DOM_VK_ENTER]='Enter';                              
 	//the combination of C+S+A was not being sent
 	//properly because there was not a case for the keycodes of CSA in the hash for echoing messages
 	//now the key presses are properly being sent.
@@ -61,10 +64,10 @@
 	echoingMessages[KeyEvent.DOM_VK_ALT]='';   // ALT
 
 	/* 
-	  * Gets the keycode of the keys pressed.
-	  * @param {Object} event     Event Type
-	  * @return toSpeak           Returns the keycode of the pressed Key
-	  *//*
+	 * Gets the keycode of the keys pressed.
+	 * @param {Object} event     Event Type
+	 * @return toSpeak           Returns the keycode of the pressed Key
+	 *//*
 	function getHumanReadableKey(String event)
 			{
 
@@ -103,24 +106,50 @@
 				}
 				return tempSpeak;
 			}
-	   */
+	  */
 
 	var keyBdListener =	 /*void*/function(event)
 	{			
 		// TODO: add Event listeners for keyboard "press" event
 		var tempSpeak = "";
+
 		if (event.ctrlKey == true)
 			tempSpeak += " control " ;
 		if (event.shiftKey == true)
 			tempSpeak += " shift " ;
 		if (event.altKey == true)
 			tempSpeak += " alt " ;
+
+		/*//this doesnot work
+		if (echoingMessages[event.keyCode] == 'Shift')
+			tempSpeak += " Shift ";
+		if (echoingMessages[event.keyCode] == 'Control')
+			tempSpeak += " Control ";
+		if (echoingMessages[event.keyCode] == 'Alt')
+			tempSpeak += " Alt ";
+		*/
+
+		if (echoingMessages[event.keyCode] == 'Enter')
+			tempSpeak += " Enter";
+		if (echoingMessages[event.keyCode] == 'Left')
+			tempSpeak += " Left ";
+		if (echoingMessages[event.keyCode] == 'Up')
+			tempSpeak += " Up ";
+		if (echoingMessages[event.keyCode] == 'Down')
+			tempSpeak += " Down ";
+		if (echoingMessages[event.keyCode] == 'Backspace')
+			tempSpeak += " back space";
+		if (echoingMessages[event.keyCode] == 'Right')
+			tempSpeak += " Right ";
+		if (echoingMessages[event.keyCode] == 'Delete')
+			tempSpeak += " Delete ";
+		if (echoingMessages[event.keyCode] == 'Home')
+			tempSpeak += " Home ";
+		if (echoingMessages[event.keyCode] == 'End')
+			tempSpeak += " End ";
+
 		tempSpeak += String.fromCharCode(event.charCode);
-		
-		//log("event.keyCode "+event.keyCode);
-		//tempSpeak += echoingMessages[event.keyCode];
-		
-		//log("key pressed! "+tempSpeak);
+		log("key pressed! "+tempSpeak);
 		listener.onKeyPress(keyBHandle,tempSpeak);
 	};
 
