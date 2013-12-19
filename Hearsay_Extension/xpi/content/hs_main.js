@@ -135,22 +135,15 @@ var listener =
 						
 			//enumerate already existed tabs and send INIT_DOMs
 			enumerateExistingTabs(gBrowser);
-			log('onConnect 2');
 			if(gBrowser.selectedTab)
 			{
-				log('onConnect 3');
 				//Set the active tab and send the ACTIVE_TAB message to server
 				var activeTabId = getTabId(gBrowser.getBrowserForTab(gBrowser.selectedTab));
-				log('onConnect 4');
 				if(activeTabId)
 				{
-					log('onConnect 5');
 					activeTabBrowserHandler = tabMap[activeTabId];
-					log('onConnect 6');
 					var activeTabMessage = hsMessage.create(hsMsgType.ACTIVE_TAB, activeTabId);
-					log('onConnect 7');
 					transport.send(activeTabMessage.toXMLString());
-					log('onConnect 8');
 				}
 			}
 			// set eventListeners for gBrowser events for new tab, delete tab, and active tab
@@ -193,12 +186,15 @@ var listener =
 		onReceive:		/*void*/function(/*hsTransport*/ handle, /*String*/message) 
 		{
 			var msg = hsMessage.load(message);
+			log("Listener onReceive msg="+message);
 			switch(msg.getType())
 			{
-			case hsMsgType.TTS_SPEAK:
+			/*case hsMsgType.TTS_SPEAK:
+				log("TTS_SPEAK received");
 				var text = msg.getParameter("text");
 				var text_id = msg.getParameter("text_id");
 				text = text && text.length>0 && text[0];
+				log("TTS_SPEAK received this :" + text);
 				if(text)
 				{
 					text_id = text_id && text_id.length>0 && text_id[0];
@@ -212,7 +208,7 @@ var listener =
 				var tab = tabMap[msg.getId()];
 				if(tab)
 					tab.setHightLight(msg.getParameter("node_id"));
-				break;
+				break;*/
 			default:
 				// TODO: print error message to console with message description
 			}

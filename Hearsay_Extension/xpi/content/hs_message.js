@@ -29,6 +29,7 @@ var hsMessage = (function()
 			var/*Map*/ parameters = {};
 			
 			return {
+				getType:	/*String*/ function() {return type; },
 				getParameters:/*Map<String, String[]>*/	function() { return parameters; },
 				getParameter: /*String[]*/ 				function(/*String*/name)	{ return parameters[name]; },
 				setParameter: /*void*/					function(/*String*/name, /*Strings[]*/values)	{ parameters[name] = values; },
@@ -82,7 +83,7 @@ var hsMessage = (function()
 			var messageType = xmlDoc.getElementsByTagName(HS_MSG_TYPE)[0].childNodes[0].nodeValue;
 			var parameterList = xmlDoc.getElementsByTagName(HS_PARAMETERS)[0].getElementsByTagName(HS_PARAMETER);
 			var parameterCount = parameterList.length;
-			messageReference = this.create(messageType, tabId);
+			var messageReference = this.create(messageType, tabId);
 			for(var index = 0; index < parameterList.length ; index++)
 			{
 				var parameterName = parameterList[index].getElementsByTagName(HS_PARAMETER_NAME)[0].textContent;
@@ -93,12 +94,12 @@ var hsMessage = (function()
 					var parameterValue = parameterValueList[parameterValueIndex].textContent;
 					parameterValues.push(parameterValue);
 				}
-				messageReference.parameters[parameterName] = parameterValues;
+				messageReference.setParameter(parameterName, parameterValues);
 			}
 			var payloadElementList = xmlDoc.getElementsByTagName(HS_PAYLOAD);
 			if(payloadElementList && payloadElementList.length == 1)
 			{
-				messageReference.payload = payloadElementList[0].childNodes[0];
+				messageReference.setPayload(payloadElementList[0].childNodes[0]);
 			}
 			return messageReference;
 		}

@@ -31,7 +31,7 @@ function hsCreateTransport(/*String*/ host, /*uint16*/ port, /*TransportListener
 
 	var _ConnectTimeOutTimer = new TimerComponent();
 	var _ReConnectTimer 	  = new TimerComponent();
-	
+
 	function log(msg)
 	{	
 		consoleService.logStringMessage("transport : " + msg);
@@ -119,10 +119,12 @@ function hsCreateTransport(/*String*/ host, /*uint16*/ port, /*TransportListener
 				try {
 
 					var avail_bytes = _in.available();
+					_data 		 	= "";
+					_DataLength		=0;
 					log( "avail = " + avail_bytes);
 					//_data += _in.read(avail_bytes);
 					_data += _in.readBytes(avail_bytes);
-
+					log("_data = "+_data);
 					for(;;) {
 						if(_DataLength==0) {	// // read length
 							// log("Really readed: " + _data.length);
@@ -141,15 +143,15 @@ function hsCreateTransport(/*String*/ host, /*uint16*/ port, /*TransportListener
 						_data  	 = _data.substr(_DataLength);
 						_DataLength = 0;
 						log( "execute message: \"" + message + "\":" + message.length);
-						/*if(listener.onReceive != null)
-							listener.onReceive(hsTransportObject,message);*/
+						//(listener.onReceive != null)
+						listener.onReceive(hsTransportObject,message);
 					}
 					_InStream.asyncWait(asyncWaitEvent, 0, 0, hstThreadManager.mainThread);
 				}
 				catch(e) {
 					log("onInputStreamReady exception. finish");
-					log(e.name);
-					log(e.message);
+					log("Exception name is : " + e.name);
+					log("Exception message is : " + e.message);
 					_OnDisconnect();
 				}
 			}
@@ -221,7 +223,7 @@ function hsCreateTransport(/*String*/ host, /*uint16*/ port, /*TransportListener
 			return false;
 		}
 	}
-	
+
 	function _Done()
 	{
 		if(_ReConnectTimer != null)
@@ -238,20 +240,20 @@ function hsCreateTransport(/*String*/ host, /*uint16*/ port, /*TransportListener
 	//* destroy all associated with socket   
 
 	function _DestroyTransport() {
-			try
-			{
-				if(_OutStream != null)
-					_OutStream.close();
-				_transportObject.close(0);
-			}
-			catch(e)
-			{
-				Log(4, "Shit happens");
-			}
-			_OutStream = null;
-			_InStream  = null;
-			_in		= null;            	
-			_transportObject = null;
+		try
+		{
+			if(_OutStream != null)
+				_OutStream.close();
+			_transportObject.close(0);
+		}
+		catch(e)
+		{
+			Log(4, "Shit happens");
+		}
+		_OutStream = null;
+		_InStream  = null;
+		_in		= null;            	
+		_transportObject = null;
 	}  
 
 	var _initSuccess = _InitTransport();
