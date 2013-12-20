@@ -1,7 +1,6 @@
 INDEX VERSION 1.122+E:\Dropbox\Project_Hearsay_V2\.metadata\.plugins\org.eclipse.wst.jsdt.core\indexes
 1623841355.index
 2818650149.index
-2603523983.index
 2752834533.index
 1973165219.index
 3111815513.index

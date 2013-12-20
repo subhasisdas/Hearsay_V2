@@ -84,7 +84,7 @@
 		 * Checking for empty nodes
 		 */
 		//Creates an XML payload in reference to the current node map by traversing the given document
-		log('Creating payload now for document node  : ' + documentRootNode.nodeName);
+		//log('Creating payload now for document node  : ' + documentRootNode.nodeName);
 		
 		var internalNodeId = obj.getNodeId(documentRootNode);
 		
@@ -129,7 +129,7 @@
 	 */
 	function initializeNodeMap(documentRootNode)
 	{
-		log('Initializing node map for document node : ' + documentRootNode.nodeName + " with value : " + documentRootNode.nodeValue + " and type : " + documentRootNode.nodeType);
+		//log('Initializing node map for document node : ' + documentRootNode.nodeName + " with value : " + documentRootNode.nodeValue + " and type : " + documentRootNode.nodeType);
 		//Invoke specified filter that checks if the given node must be ignored or not
 		if(ignoreCheckFunction(documentRootNode))
 		{
@@ -177,7 +177,7 @@
 		 */		
 		docToSend.addEventListener('load',  function(event) {
 			//Parse the page into an XML tree and invoke onDOMInit
-			log('load was raised');
+			//log('load was raised');
 			if(docToSend == null)
 			{
 				docToSend = browser.contentDocument;
@@ -191,7 +191,7 @@
 		}, false);
 		document.addEventListener('DOMContentLoaded',  function(event) {
 			//Parse the page into an XML tree and invoke onDOMInit
-			log('DOMContentLoaded was raised');
+			//log('DOMContentLoaded was raised');
 			if(docToSend == null)
 			{
 				docToSend = browser.contentDocument;
@@ -206,7 +206,7 @@
 
 		document.addEventListener('pageshow',  function(event) {
 			//Parse the page into an XML tree and invoke onDOMInit
-			log('pageshow event was raised with state : ' + event.doc.readyState);
+			//log('pageshow event was raised with state : ' + event.doc.readyState);
 			if(docToSend == null)
 			{
 				docToSend = browser.contentDocument;
@@ -222,7 +222,7 @@
 
 	document.addEventListener('pagehide',  function(event) {
 		//We do not need to process pagehide so may remove this listener
-		log('pagehide was raised');
+		//log('pagehide was raised');
 	}, false);
 
 	return obj;

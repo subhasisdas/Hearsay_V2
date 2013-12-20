@@ -75,6 +75,7 @@ public class MessageChannel extends server.Loggable implements IMessageChannel
 	public synchronized void send(Message msg) throws Exception 
 	{
 		final String smsg = msg.writeXML();
+		//System.out.println("The message being sent was : " + smsg);
 		final byte[] msgb = smsg.getBytes("UTF-8");
 		String msg_len = String.valueOf(msgb.length);
 		msg_len = "00000000".substring(msg_len.length())+msg_len;

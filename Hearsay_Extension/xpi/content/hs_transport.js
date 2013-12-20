@@ -121,10 +121,10 @@ function hsCreateTransport(/*String*/ host, /*uint16*/ port, /*TransportListener
 					var avail_bytes = _in.available();
 					_data 		 	= "";
 					_DataLength		=0;
-					log( "avail = " + avail_bytes);
+					//log( "avail = " + avail_bytes);
 					//_data += _in.read(avail_bytes);
 					_data += _in.readBytes(avail_bytes);
-					log("_data = "+_data);
+					//log("_data = "+_data);
 					for(;;) {
 						if(_DataLength==0) {	// // read length
 							// log("Really readed: " + _data.length);
@@ -142,7 +142,7 @@ function hsCreateTransport(/*String*/ host, /*uint16*/ port, /*TransportListener
 						var message 	 = decodeURIComponent(escape(_data.substr(0, _DataLength)));
 						_data  	 = _data.substr(_DataLength);
 						_DataLength = 0;
-						log( "execute message: \"" + message + "\":" + message.length);
+						//log( "execute message: \"" + message + "\":" + message.length);
 						//(listener.onReceive != null)
 						listener.onReceive(hsTransportObject,message);
 					}

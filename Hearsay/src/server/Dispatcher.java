@@ -115,7 +115,7 @@ public class Dispatcher extends Loggable implements ICommunicatorListener, IChan
 			textIdParameter.add(Long.toString(globalTabId));
 			ttsSpeakMessage.getArguments().put("text", textToSpeak);
 			ttsSpeakMessage.getArguments().put("text_id", textIdParameter);
-			System.out.println("ttsSpeakMessage being sent :"+ttsSpeakMessage.toString());
+			System.out.println("ttsSpeakMessage being sent :"+ttsSpeakMessage.getArguments().values());
 			sp.send(ttsSpeakMessage);
 			break;
 		case MOUSE:			// Parameters: "id" - clicked node id, extra parameters - pressed mouse button state. 
@@ -132,7 +132,7 @@ public class Dispatcher extends Loggable implements ICommunicatorListener, IChan
 			textIdParameterMouse.add(Long.toString(globalTabId));
 			ttsSpeakMessageMouse.getArguments().put("text", textToSpeakMouse);
 			ttsSpeakMessageMouse.getArguments().put("text_id", textIdParameterMouse);
-			System.out.println("ttsSpeakMessage being sent :"+ttsSpeakMessageMouse.toString());
+			//System.out.println("ttsSpeakMessage being sent :"+ttsSpeakMessageMouse.getArguments().containsValue(0));
 			sp.send(ttsSpeakMessageMouse);
 			break;
 		case FOCUS:			// Parameters: "id" - new currently selected node by browser.

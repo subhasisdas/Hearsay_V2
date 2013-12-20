@@ -111,7 +111,7 @@
 	var keyBdListener =	 /*void*/function(event)
 	{			
 		// TODO: add Event listeners for keyboard "press" event
-		var tempSpeak="";
+		var tempSpeak="hearsaysay";
 
 		if (event.ctrlKey == true)
 			tempSpeak += "control" ;
@@ -127,7 +127,7 @@
 			tempSpeak += " Control ";
 		if (echoingMessages[event.keyCode] == 'Alt')
 			tempSpeak += " Alt ";
-		*/
+		 */
 
 		if (echoingMessages[event.keyCode] == 'Enter')
 			tempSpeak = "Enter" ;
@@ -150,8 +150,16 @@
 		else
 			tempSpeak += String.fromCharCode(event.charCode);
 		
+		var temp =tempSpeak ? true : false;
+		log("temp :"+temp+ "tempspeak :"+tempSpeak+"sep");
+		if(tempSpeak ? true : false)
+		{
+			log("EMPTY STRING");
+		}
+		
 		log("key pressed! "+tempSpeak);
 		listener.onKeyPress(keyBHandle,tempSpeak);
+		//else do not send				
 	};
 
 	log(" Registering the keyboard listener ");

@@ -17,16 +17,5 @@
   
   <script type="application/x-javascript" src="speakGenerator.js" />
   <script type="application/x-javascript" src="speakClient.js" />
-  
-  <toolbox id="navigator-toolbox">
-    <toolbar id="webTTSToolbar" toolbarname="WebTTS Toolbar" accesskey="T"
-             class="chromeclass-toolbar" context="toolbar-context-menu" 
-             hidden="false" persist="hidden">
-       		<toolbarbutton id="play" label="Play" />
 
-       		<toolbarbutton id="pause" label="Pause" />
-       		
-       		<toolbarbutton id="send" label="Send" />
-	</toolbar>
-  </toolbox> 
 </overlay> 
