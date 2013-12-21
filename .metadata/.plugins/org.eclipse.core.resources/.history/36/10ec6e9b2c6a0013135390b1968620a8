@@ -21,7 +21,7 @@ public class DomIterator implements IDomIterator
 	}
 
 	/**
-	 * Find the first text node if one exists within the given root node's subtree
+	 * Find the first text node if one exists within this node's subtree
 	 * @param rootNode
 	 */
 	private Node findTextNodeInSubtree(Node rootNode)
@@ -49,69 +49,73 @@ public class DomIterator implements IDomIterator
 	@Override
 	public boolean next() 
 	{
-		System.out.println("DOM : Line 1");
 		Node currentPosition = getPos();
-		System.out.println("DOM : Line 2");
 		if(currentPosition == null)
 		{
 			return false;
 		}
-		System.out.println("DOM : Line 3");
 		Node destinationPosition = null;
 		Node currentNode = currentPosition;
-		Node nextNodeToCheck;
-		System.out.println("DOM : Line 4 with : " + currentNode.getNodeName());
-		do
+		Node nextSibling = currentNode.getNextSibling();
+		if(nextSibling == null)
 		{
-			System.out.println("DOM : Line 5");
-			nextNodeToCheck = currentNode;
-			Node nextSibling = currentNode.getNextSibling();
-			if(nextSibling == null)
+			Node parentNode = currentNode.getParentNode();
+			while(parentNode != null)
 			{
-				Node parentNode = currentNode.getParentNode();
-				while(parentNode != null)
+				Node parentNodeSibling = parentNode.getNextSibling();
+				if(parentNodeSibling != null)
 				{
-					System.out.println("Parent node : " + parentNode.getNodeName());
-					Node parentNodeSibling = parentNode.getNextSibling();
-					if(parentNodeSibling != null)
-					{
-						nextNodeToCheck = parentNodeSibling;
-						break;
-					}
-					parentNode = parentNode.getParentNode();
+					currentNode = parentNodeSibling;
+					break;
 				}
+				parentNode = parentNode.getParentNode();
 			}
-			else
-			{
-				nextNodeToCheck = nextSibling;
-			}
-			if(currentNode.isSameNode(nextNodeToCheck))
-			{
-				System.out.println("DOM : Line 7");
-				//We had no new node when we tried to move
-				break;
-			}
-			currentNode = nextNodeToCheck;
-			System.out.println("DOM : Line 8");
+		}
+		else
+		{
+			currentNode = nextSibling;
+		}
+		if(currentNode.isSameNode(currentPosition))
+		{
+			return false;
+		}
+		while(currentNode != null)
+		{
 			if((currentNode.getNodeName()).equals("textelement"))
 			{
-				System.out.println("DOM : Line 9 with : " + currentNode.getTextContent());
 				destinationPosition = currentNode;
 				break;
 			}
 			else
 			{
-				System.out.println("DOM : Line 10");
-				Node prevRelativeNode = findTextNodeInSubtree(currentNode);
-				if(prevRelativeNode != null)
+				Node nextRelativeNode = findTextNodeInSubtree(currentNode);
+				if(nextRelativeNode != null)
 				{
-					destinationPosition = prevRelativeNode;
+					destinationPosition = nextRelativeNode;
 					break;
 				}
 			}
+			Node tmpNode = currentNode.getNextSibling();
+			if(tmpNode == null)
+			{
+				Node parentNode = currentNode.getParentNode();
+				while(parentNode != null)
+				{
+					Node parentNodeSibling = parentNode.getNextSibling();
+					if(parentNodeSibling != null)
+					{
+						currentNode = parentNodeSibling;
+						break;
+					}
+					parentNode = parentNode.getParentNode();
+				}
+				
+			}
+			else
+			{
+				currentNode = tmpNode;
+			}
 		}
-		while((currentNode.getParentNode() != null) || (currentNode.getNextSibling() != null));
-
 		if(destinationPosition != null)
 		{
 			//TODO: Check this
@@ -131,35 +135,31 @@ public class DomIterator implements IDomIterator
 		}
 		Node destinationPosition = null;
 		Node currentNode = currentPosition;
-		Node nextNodeToCheck;
-		do
+		Node prevSibling = currentNode.getPreviousSibling();
+		if(prevSibling == null)
 		{
-			nextNodeToCheck = currentNode;
-			Node previousSibling = currentNode.getPreviousSibling();
-			if(previousSibling == null)
+			Node parentNode = currentNode.getParentNode();
+			while(parentNode != null)
 			{
-				Node parentNode = currentNode.getParentNode();
-				while(parentNode != null)
+				Node parentNodeSibling = parentNode.getPreviousSibling();
+				if(parentNodeSibling != null)
 				{
-					Node parentNodeSibling = parentNode.getPreviousSibling();
-					if(parentNodeSibling != null)
-					{
-						nextNodeToCheck = parentNodeSibling;
-						break;
-					}
-					parentNode = parentNode.getParentNode();
+					currentNode = parentNodeSibling;
+					break;
 				}
+				parentNode = parentNode.getParentNode();
 			}
-			else
-			{
-				nextNodeToCheck = previousSibling;
-			}
-			if(currentNode.isSameNode(nextNodeToCheck))
-			{
-				//We had no new node when we tried to move
-				break;
-			}
-			currentNode = nextNodeToCheck;
+		}
+		else
+		{
+			currentNode = prevSibling;
+		}
+		if(currentNode.isSameNode(currentPosition))
+		{
+			return false;
+		}
+		while(currentNode != null)
+		{
 			if((currentNode.getNodeName()).equals("textelement"))
 			{
 				destinationPosition = currentNode;
@@ -174,9 +174,27 @@ public class DomIterator implements IDomIterator
 					break;
 				}
 			}
+			Node tmpNode = currentNode.getPreviousSibling();
+			if(tmpNode == null)
+			{
+				Node parentNode = currentNode.getParentNode();
+				while(parentNode != null)
+				{
+					Node parentNodeSibling = parentNode.getPreviousSibling();
+					if(parentNodeSibling != null)
+					{
+						currentNode = parentNodeSibling;
+						break;
+					}
+					parentNode = parentNode.getParentNode();
+				}
+				
+			}
+			else
+			{
+				currentNode = tmpNode;
+			}
 		}
-		while((currentNode.getParentNode() != null) || (currentNode.getPreviousSibling() != null));
-
 		if(destinationPosition != null)
 		{
 			//TODO: Check this
@@ -208,21 +226,7 @@ public class DomIterator implements IDomIterator
 	public boolean onRemove(Node node) 
 	{
 		//TODO: Implementation based on current position
-		/**
-		 * Check if the node is the same as the current node being spoken out
-		 * Then, we need to recalculate our speaking position and return true
-		 * Else, we return false after removing this node
-		 */
-		if(node.isSameNode(getPos()))
-		{
-			//Recalculate the speaking position to a text node
-
-			return true;
-		}
-		else
-		{
-			return false;
-		}
+		return false;
 	}
 
 	@Override
@@ -234,7 +238,7 @@ public class DomIterator implements IDomIterator
 		}
 		else
 		{
-			//TODO: Navigate to the closest text node position
+			//TODO: Navigate to the closest text node
 			this.node = node;
 			return true;
 		}
