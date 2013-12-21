@@ -92,8 +92,7 @@ function hsCreateTransport(/*String*/ host, /*uint16*/ port, /*TransportListener
 		_in	   	   = new BinaryInputStreamComponent();        
 		_in.setInputStream(_InStream);
 		_InStream.asyncWait(asyncWaitEvent, 0, 0, hstThreadManager.mainThread); 
-		if(listener.onConnect != null)
-			listener.onConnect(hsTransportObject);
+		listener.onConnect(hsTransportObject);
 	}
 
 	function _OnDisconnect()
@@ -119,12 +118,12 @@ function hsCreateTransport(/*String*/ host, /*uint16*/ port, /*TransportListener
 				try {
 
 					var avail_bytes = _in.available();
-					_data 		 	= "";
-					_DataLength		=0;
-					//log( "avail = " + avail_bytes);
+					log( "avail = " + avail_bytes);
+					_data ="";
+					_DataLength = 0;
 					//_data += _in.read(avail_bytes);
 					_data += _in.readBytes(avail_bytes);
-					//log("_data = "+_data);
+
 					for(;;) {
 						if(_DataLength==0) {	// // read length
 							// log("Really readed: " + _data.length);
@@ -142,16 +141,18 @@ function hsCreateTransport(/*String*/ host, /*uint16*/ port, /*TransportListener
 						var message 	 = decodeURIComponent(escape(_data.substr(0, _DataLength)));
 						_data  	 = _data.substr(_DataLength);
 						_DataLength = 0;
-						//log( "execute message: \"" + message + "\":" + message.length);
-						//(listener.onReceive != null)
-						listener.onReceive(hsTransportObject,message);
+						log( "execute message: \"" + message + "\":" + message.length);
+						if(message && (message.length > 0))
+						{
+							listener.onReceive(hsTransportObject,message);
+						}
 					}
 					_InStream.asyncWait(asyncWaitEvent, 0, 0, hstThreadManager.mainThread);
 				}
 				catch(e) {
 					log("onInputStreamReady exception. finish");
-					log("Exception name is : " + e.name);
-					log("Exception message is : " + e.message);
+					log(e.name);
+					log(e.message);
 					_OnDisconnect();
 				}
 			}
@@ -164,38 +165,46 @@ function hsCreateTransport(/*String*/ host, /*uint16*/ port, /*TransportListener
 	 */ 	 
 	var setEventSinkEvent=
 	{
-			onTransportStatus : function (/*nsITransport*/ aTransport,/*nsresult*/ aStatus,/*unsigned long long*/ aProgress,/*unsigned long long*/ aProgressMax) {
-				switch(aStatus)
+			onTransportStatus : function (/*nsITransport*/ aTransport,/*nsresult*/ aStatus,/*unsigned long long*/ aProgress,/*unsigned long long*/ aProgressMax) 
+			{
+				try
 				{
-				case aTransport.STATUS_READING:
-					log("onTransportStatus::status: Reading, aProgress=" + aProgress + ", aProgressMax="+aProgressMax);
-					break;
-				case aTransport.STATUS_WRITING:
-					log("onTransportStatus::status: Writing, aProgress=" + aProgress + ", aProgressMax="+aProgressMax);
-					break;
-				case aTransport.STATUS_RESOLVING:
-					log("onTransportStatus::status: Resolving, aProgress=" + aProgress + ", aProgressMax="+aProgressMax);
-					break; 			
-				case aTransport.STATUS_CONNECTED_TO: 			
-					log("onTransportStatus::status: Connected, aProgress=" + aProgress + ", aProgressMax="+aProgressMax);
-					_onConnect();		    			    
-					break; 			
-				case aTransport.STATUS_SENDING_TO:
-					log("onTransportStatus::status: Sending, aProgress=" + aProgress + ", aProgressMax="+aProgressMax);
-					break; 			
+					switch(aStatus)
+					{
+					case aTransport.STATUS_READING:
+						//log("onTransportStatus::status: Reading, aProgress=" + aProgress + ", aProgressMax="+aProgressMax);
+						break;
+					case aTransport.STATUS_WRITING:
+						//log("onTransportStatus::status: Writing, aProgress=" + aProgress + ", aProgressMax="+aProgressMax);
+						break;
+					case aTransport.STATUS_RESOLVING:
+						//log("onTransportStatus::status: Resolving, aProgress=" + aProgress + ", aProgressMax="+aProgressMax);
+						break; 			
+					case aTransport.STATUS_CONNECTED_TO: 			
+						//log("onTransportStatus::status: Connected, aProgress=" + aProgress + ", aProgressMax="+aProgressMax);
+						_onConnect();		    			    
+						break; 			
+					case aTransport.STATUS_SENDING_TO:
+						//log("onTransportStatus::status: Sending, aProgress=" + aProgress + ", aProgressMax="+aProgressMax);
+						break; 			
 
-				case aTransport.STATUS_RECEIVING_FROM:
-					log("onTransportStatus::status: Receiving, aProgress=" + aProgress + ", aProgressMax="+aProgressMax);  				
-					break;
+					case aTransport.STATUS_RECEIVING_FROM:
+						//log("onTransportStatus::status: Receiving, aProgress=" + aProgress + ", aProgressMax="+aProgressMax);  				
+						break;
 
-				case aTransport.STATUS_CONNECTING_TO:
-					log("onTransportStatus::status: Connecting, aProgress=" + aProgress + ", aProgressMax="+aProgressMax);
-					break; 			
-				case aTransport.STATUS_WAITING_FOR:
-					log("onTransportStatus::status: Waiting, aProgress=" + aProgress + ", aProgressMax="+aProgressMax);
-					break;
-				default:
-					log("onTransportStatus::status: Unknown, code=" + aStatus);
+					case aTransport.STATUS_CONNECTING_TO:
+						//log("onTransportStatus::status: Connecting, aProgress=" + aProgress + ", aProgressMax="+aProgressMax);
+						break; 			
+					case aTransport.STATUS_WAITING_FOR:
+						//log("onTransportStatus::status: Waiting, aProgress=" + aProgress + ", aProgressMax="+aProgressMax);
+						break;
+					default:
+						//log("onTransportStatus::status: Unknown, code=" + aStatus);
+					}
+				}
+				catch(ex)
+				{
+					log("hit happend: "+ex.message+"\n"+ex.stack);
 				}
 			}
 	}
@@ -248,7 +257,7 @@ function hsCreateTransport(/*String*/ host, /*uint16*/ port, /*TransportListener
 		}
 		catch(e)
 		{
-			Log(4, "Shit happens");
+			log("Shit happens");
 		}
 		_OutStream = null;
 		_InStream  = null;
@@ -268,7 +277,7 @@ function hsCreateTransport(/*String*/ host, /*uint16*/ port, /*TransportListener
 	var hsTransportObject = {
 			send : function(message) {
 				if(_OutStream == null)
-					Log(1, "Error: call hs_transport.js::hstSendMsg() without initialize transport");
+					log("Error: call hs_transport.js::hstSendMsg() without initialize transport");
 				else {
 					try
 					{

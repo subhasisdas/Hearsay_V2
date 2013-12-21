@@ -80,14 +80,15 @@ public class Message
 			throw new Exception("An invalid message type was found on the document with name : " + typeName);
 		}
 		Message message = new Message(type, tabId);
-		Node payload = xmlDocument.getElementById("payload");
+		Node payloadElement = xmlDocument.getElementsByTagName("payload").item(0);
 		//If a payload exists then add it onto the message
-		if(payload != null)
+		if(payloadElement != null)
 		{
+			System.out.println("Payload element not null");
 			//The payload's root node will be cloned deeply
-			if(payload.getChildNodes().getLength() == 1)
+			if(payloadElement.getChildNodes().getLength() == 1)
 			{
-				message.setPayload(payload.getFirstChild().cloneNode(true));
+				message.setPayload(payloadElement.getFirstChild().cloneNode(true));
 			}
 		}
 		Node parameters = xmlDocument.getElementsByTagName("parameters").item(0);
@@ -147,18 +148,24 @@ public class Message
 
 	public String writeXML() throws Exception
 	{
+		
 		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 		DocumentBuilder builder =  factory.newDocumentBuilder();
 		Document hearsayXMLMessage = builder.newDocument();
+		
 		Element hearsayMessage = (Element) hearsayXMLMessage.createElement("hearsayMessage");
+		
 		hearsayXMLMessage.appendChild(hearsayMessage);
-
+		
 		//Add the identifier
 		Element id = hearsayXMLMessage.createElement("tabId");
+		
 		Text idValue = hearsayXMLMessage.createTextNode(Long.toString(this.tabId));
+		
 		id.appendChild(idValue);
+		
 		hearsayMessage.appendChild(id);
-
+		
 		//Add the message type
 		Element type = hearsayXMLMessage.createElement("type");
 		Text typeValue = hearsayXMLMessage.createTextNode(this.type.toString());
@@ -169,7 +176,6 @@ public class Message
 		Element parameters = hearsayXMLMessage.createElement("parameters");
 		for(Map.Entry<String, List<String>> parameter : arguments.entrySet())
 		{
-			System.out.println("Processing parameter !!");
 			//Process the current parameter and add an element for it to the document	
 			String parameterName = parameter.getKey();
 			List<String> parameterValueList = parameter.getValue();
@@ -196,8 +202,9 @@ public class Message
 		//Clone the payload if there is one
 		if(payload != null)
 		{
+			System.out.println("Payload not null in Message.java");
 			Element payloadElement = hearsayXMLMessage.createElement("payload");
-			payloadElement.appendChild(this.payload.cloneNode(true));
+			payloadElement.appendChild(hearsayXMLMessage.importNode(payload, true));
 			hearsayMessage.appendChild(payloadElement);
 		}
 		Writer outWriter = new StringWriter();

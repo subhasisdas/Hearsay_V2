@@ -52,7 +52,7 @@ public class MessageChannel extends server.Loggable implements IMessageChannel
 						{	// message not read yet
 							log(1, " : Message Receive() works : message :"/*+message*/);	
 							//listener.onReceive
-								System.out.println(message);
+								//System.out.println("Received message for parsing : " + message);
 								listener.onReceive(MessageChannel.this, Message.parseXML(message));
 						}
 					}
@@ -72,16 +72,23 @@ public class MessageChannel extends server.Loggable implements IMessageChannel
 	}
 	
 	@Override
-	public synchronized void send(Message msg) throws Exception 
+	public synchronized void send(Message msg) 
 	{
+		try
+		{
 		final String smsg = msg.writeXML();
-		//System.out.println("The message being sent was : " + smsg);
+		System.out.println("Sending smsg");
 		final byte[] msgb = smsg.getBytes("UTF-8");
 		String msg_len = String.valueOf(msgb.length);
 		msg_len = "00000000".substring(msg_len.length())+msg_len;
 		final byte[] msg_lenb = msg_len.getBytes("UTF-8");
 		socket.getOutputStream().write(msg_lenb);
 		socket.getOutputStream().write(msgb);
+		}
+		catch(Exception e)
+		{
+			System.out.println("Sending error: " + e);
+		}
 	}
 	
 	public synchronized int getNextTextId()

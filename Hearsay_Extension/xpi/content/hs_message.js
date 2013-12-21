@@ -10,7 +10,7 @@
  */
 
 var hsMessage = (function()
-{
+		{
 	const HS_MSG_TAG 	= "hearsayMessage";
 	const HS_MSG_ID	 	= "tabId";
 	const HS_MSG_TYPE 	= "type";
@@ -20,15 +20,16 @@ var hsMessage = (function()
 	const HS_PARAMETER_NAME = "parameterName";
 	const HS_PARAMETER_VALUES = "parameterValues";
 	const HS_PARAMETER_VALUE = "parameterValue";
-	
+
 	return {
 		create: /*hsMessage*/ function(/*MsgType*/ type, /*int*/ tabId)
 		{
-		// message private data
+			// message private data
 			var/*Node*/ payload;
 			var/*Map*/ parameters = {};
-			
+
 			return {
+				getId:     /*int*/ function() { return tabId; },
 				getType:	/*String*/ function() {return type; },
 				getParameters:/*Map<String, String[]>*/	function() { return parameters; },
 				getParameter: /*String[]*/ 				function(/*String*/name)	{ return parameters[name]; },
@@ -65,10 +66,11 @@ var hsMessage = (function()
 					}
 					xmlroot.appendChild(parametersElement);
 					//Append the payload if a valid payload exists
-					if(payload && payload instanceof Object)
+					if(payload)
 					{
 						var payloadNode = xmldoc.createElement(HS_PAYLOAD);
-						payloadNode.appendChild(payload);
+						var clonedPayload = xmldoc.importNode(payload, true);
+						payloadNode.appendChild(clonedPayload);
 						xmlroot.appendChild(payloadNode);
 					}
 					return new XMLSerializer().serializeToString(xmlroot);

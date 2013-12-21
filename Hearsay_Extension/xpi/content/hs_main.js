@@ -32,7 +32,7 @@ function getTabId(/*Browser*/ br)
 
 function ignoreCheckFunction(/*Node*/ node)
 {
-	if(node.nodeName == 'SCRIPT' || node.nodeName == 'script')
+	if(node.nodeName == 'SCRIPT' || node.nodeName == 'script' || node.nodeType == 8)
 	{
 		return true;
 	}
@@ -193,7 +193,7 @@ var listener =
 
 				var text = msg.getParameter("text");
 				var text_id = msg.getParameter("text_id");				
-				text = text && text.length>0 && text[1];				
+				text = text && text.length>0 && text[1];
 				if(text)
 				{
 					text_id = text_id && text_id.length>0 && text_id[1];
@@ -204,9 +204,12 @@ var listener =
 				// TODO: implement it
 				break;
 			case hsMsgType.SET_HIGHLIGHT:
+				log("hsMsgType.SET_HIGHLIGHT: Received")
 				var tab = tabMap[msg.getId()];
+				log("tab"+tab+":"+msg.getParameter("node_id"));
 				if(tab)
-					tab.setHightLight(msg.getParameter("node_id"));
+					tab.highlight(msg.getParameter("node_id"));
+				log("hsMsgType.SET_HIGHLIGHT: OK")
 				break;
 			default:
 				// TODO: print error message to console with message description
@@ -216,6 +219,11 @@ var listener =
 		onEndSpeak: /*void*/function(/*ttsHandler*/tts, /*String*/text_id)
 		{
 			log("onEndSpeak "+text_id );
+			var activeTabId =  getTabId(gBrowser.getBrowserForTab(gBrowser.selectedTab));
+			var activeTabMessage = hsMessage.create(hsMsgType.TTS_DONE, activeTabId);
+			activeTabMessage.setParameter("text_id", [text_id]);
+			//if(!pause)
+			transport.send(activeTabMessage.toXMLString());
 		},
 		// ----------------------------------------------------------------------------------
 		// TODO: add keyboard, mouse event handlers
@@ -224,26 +232,18 @@ var listener =
 			// TODO: send hsMsgType.KEY message
 			// TODO: send hsMsgType.KEY message
 			log(" onKeyPress message sent!"+ key);
-			//tts.speak(key,1);
-
 			var activeTabId =  getTabId(gBrowser.getBrowserForTab(gBrowser.selectedTab));
 			if(activeTabId)
 			{
 				log(" onKeyPress message sent!");
-
-				if(key)
+				if(key && key.length>0)	
 				{
-					//log("here here");
-					if(key.length !=0)	
-					{
-						var activeTabMessage = hsMessage.create(hsMsgType.KEY, activeTabId);
-						activeTabMessage.setParameter("press", [key]);
-						log("msg sent is :"+activeTabMessage.toXMLString())
-						transport.send(activeTabMessage.toXMLString());
-					}
-					else
-						log("o crap!");
+					var activeTabMessage = hsMessage.create(hsMsgType.KEY, activeTabId);
+					activeTabMessage.setParameter("press", [key]);
+					log("msg sent is :"+activeTabMessage.toXMLString())
+					transport.send(activeTabMessage.toXMLString());
 				}
+
 			}
 		},
 		onClick : /*void*/function(/*[hsMouseHandler]*/ mouse, /*[Node]*/ clicked_node, /*[String]*/ button)

@@ -40,6 +40,4 @@ public class Hearsay_Main
 		dispatcher.release();		
 		System.out.println("Zed is dead");
 	}
-
-
 }

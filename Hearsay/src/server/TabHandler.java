@@ -7,8 +7,10 @@ import java.util.Map;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
+import org.w3c.dom.DOMException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
@@ -18,28 +20,31 @@ import interfaces.ITabHandler;
 
 public class TabHandler implements ITabHandler
 {
+	public static final String NODE_ID_ATTR = "node_id";
+
 	private final long globalId;
 	private final long  tabId;
 	private final IMessageChannel channel;
-	
+
 	private Document document;
 	private final Map<Integer/*NodeId*/,Node> nodeMap = new HashMap<Integer,Node>();
 	private IDomIterator iterator = null;
 	private boolean active = false;
-		
+	private boolean initializedAtleastOnce = false;
+
 	public TabHandler(long gId, long id, IMessageChannel ch)
 	{
 		globalId = gId;
 		tabId = id;
 		channel = ch;
 	}
-	
+
 	@Override
 	public IMessageChannel getChannel()	{ return channel; }
-	
+
 	@Override
 	public long getGlobalId()	{ return globalId; }	
-	
+
 	@Override
 	public long getId()	{ return tabId; }
 
@@ -47,7 +52,7 @@ public class TabHandler implements ITabHandler
 	{
 		if(element != null)
 		{
-			String nodeId = element.getAttribute("node_id");
+			String nodeId = element.getAttribute(NODE_ID_ATTR);
 			nodeMap.put(Integer.parseInt(nodeId), (Node) element);
 			NodeList nodeList = element.getChildNodes();
 			for(int index = 0; index < nodeList.getLength(); index++)
@@ -61,54 +66,136 @@ public class TabHandler implements ITabHandler
 			}
 		}
 	}
-	
+
 	@Override
-	public synchronized void onReceive(Message msg) throws Exception 
+	public synchronized void onReceive(Message msg) throws Exception
 	{
 		// TODO: process all messages, related to tab (see msg types)
 		switch(msg.type)
 		{
-			case INIT_DOM:
-				Node payload = msg.payload;
-				if(payload != null)
+		case INIT_DOM:
+			System.out.println("TabHandler received INIT_DOM request with payload : " + msg.writeXML());
+			Node payload = msg.payload;
+			if(payload != null)
+			{
+				Node documentPayload = payload.cloneNode(true);
+				DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+				DocumentBuilder builder = factory.newDocumentBuilder();
+				document = builder.newDocument();
+				Node importedNode = document.importNode(documentPayload, true);
+				document.appendChild(importedNode);
+				//Recursively traverse the document and update the nodeMap
+				Element documentElement = document.getDocumentElement();
+				updateNodeMap(documentElement);
+				iterator = new DomIterator(this);
+				iterator.begin();
+				//Sending TTS_SPEAK to extension
+				if(active)
 				{
-					Node documentPayload = payload.cloneNode(true);
-					DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-					DocumentBuilder builder = factory.newDocumentBuilder();
-					document = builder.newDocument();
-					document.importNode(documentPayload, true);
-					document.appendChild(documentPayload); 
-					//Recursively traverse the document and update the nodeMap
-					Element documentElement = document.getDocumentElement();
-					updateNodeMap(documentElement);
-					iterator = new DomIterator(this);
-					iterator.begin();
-					//Sending TTS_SPEAK to extension
-					//Message ttsSpeakMessage = new Message(MessageType.TTS_SPEAK, tabId);
-					//ttsSpeakMessage.getArguments().put("text", new ArrayList<String>() {{add(iterator.getPos().getNodeValue());}});
-					//ttsSpeakMessage.getArguments().put("text_id", new ArrayList<String>() {{add(String.valueOf(channel.getNextTextId()));}});
-					//channel.send(ttsSpeakMessage);
+					System.out.println("Line 1");
+					String nodeValueToSend = null;
+					if(iterator.getPos().getNodeName().equals("textelement"))
+					{
+						System.out.println("Line 2");
+						nodeValueToSend = iterator.getPos().getTextContent();
+					}
+					else
+					{
+						System.out.println("Line 3");
+						boolean nextNodeExists = iterator.next();
+						if(nextNodeExists)
+						{
+							System.out.println("Line 4 : ");
+							nodeValueToSend = iterator.getPos().getTextContent();
+						}
+					}
+					System.out.println("Line 5 : " + nodeValueToSend);
+					//String nodeValueToSend = findNextNode();
+					if(nodeValueToSend != null)
+					{
+						Message ttsSpeakMessage = new Message(MessageType.TTS_SPEAK, tabId);
+						ArrayList<String> textParameter = new ArrayList<String>();
+						textParameter.add(nodeValueToSend);
+						ttsSpeakMessage.getArguments().put("text", textParameter);
+						ttsSpeakMessage.getArguments().put("text_id", new ArrayList<String>() {{add(String.valueOf(channel.getNextTextId()));}});
+						channel.send(ttsSpeakMessage);
+
+						/*System.out.println("Sending Hightlight Node");
+						//sending the highlight text
+						Message highlightMessage = new Message(MessageType.SET_HIGHLIGHT, tabId);
+						ArrayList<String> nodeToHighlight = new ArrayList<String>();
+						if(iterator.getPos().getNodeName().equals("textelement"))
+						{
+							//System.out.println("Line 2");
+							int nodeIdToSend = getNodeId(iterator.getPos().getParentNode());
+							nodeToHighlight.add(Integer.toString(nodeIdToSend));
+							highlightMessage.getArguments().put("node_id", nodeToHighlight);
+							channel.send(highlightMessage);
+							System.out.println("Highlight Message sent at INIT_DOM");
+						}*/
+					}
 				}
-				else
+				initializedAtleastOnce = true;
+			}
+			else
+			{
+				throw new Exception("An INIT DOM message was received with an invalid payload");
+			}
+			break;
+		case UPDATE_DOM:
+			// TODO: update Docunent and nodeMap. check, that iterator.getPos() is not inside updated tree
+			// if it is, then update iterator
+		case DELETE_DOM:
+			// TODO: update Docunent and nodeMap. check, that iterator.getPos() is not inside updated tree
+			// update iterator
+		case MOVE_DOM:
+			// TODO: update Docunent.
+		case UPDATE_ATTR:
+			// TODO: update Docunent.
+		case DELETE_ATTR:
+			// TODO: update Docunent.
+		case CHANGE_VALUE:
+			// TODO: update Docunent. if iterator points to this input element,
+			// re-read its value.
+		case TTS_DONE:
+			System.out.println("TTS Done was invoked, so speak next node");
+			if(active)
+			{
+				if(iterator.next())
 				{
-					throw new Exception("An INIT DOM message was received with an invalid payload");
+					String nodeValueToSend = iterator.getPos().getTextContent();
+					if(nodeValueToSend != null)
+					{
+						Message ttsSpeakMessage = new Message(MessageType.TTS_SPEAK, tabId);
+						ArrayList<String> textParameter = new ArrayList<String>();
+						textParameter.add(nodeValueToSend);
+						ttsSpeakMessage.getArguments().put("text", textParameter);
+						ttsSpeakMessage.getArguments().put("text_id", new ArrayList<String>() {{add(String.valueOf(channel.getNextTextId()));}});
+						channel.send(ttsSpeakMessage);
+
+						System.out.println("Sending Hightlight Node");
+						//sending the highlight text
+						Message highlightMessage = new Message(MessageType.SET_HIGHLIGHT, tabId);
+						ArrayList<String> nodeToHighlight = new ArrayList<String>();
+
+						/*	nodeToHighlight.add(Integer.toString((getNodeId(iterator.getPos()))));
+						highlightMessage.getArguments().put("node_id", nodeToHighlight);
+						channel.send(highlightMessage);*/
+
+						if(iterator.getPos().getNodeName().equals("textelement"))
+						{
+							//System.out.println("Line 2");
+							int nodeIdToSend = getNodeId(iterator.getPos().getParentNode());
+							nodeToHighlight.add(Integer.toString(nodeIdToSend));
+							highlightMessage.getArguments().put("node_id", nodeToHighlight);
+							channel.send(highlightMessage);
+							System.out.println("Highlight Message sent in TTS_DONE");
+						}
+
+					}
 				}
-				break;
-			case UPDATE_DOM:
-				// TODO: update Docunent and nodeMap. check, that iterator.getPos() is not inside updated tree
-				// if it is, then update iterator
-			case DELETE_DOM:
-				// TODO: update Docunent and nodeMap. check, that iterator.getPos() is not inside updated tree
-				// update iterator
-			case MOVE_DOM:
-				// TODO: update Docunent.
-			case UPDATE_ATTR:
-				// TODO: update Docunent.
-			case DELETE_ATTR:
-				// TODO: update Docunent.
-			case CHANGE_VALUE:
-				// TODO: update Docunent. if iterator points to this input element,
-				// re-read its value.
+			}
+			break;
 			/**
 			 * TTS_DONE
 			 */
@@ -119,42 +206,50 @@ public class TabHandler implements ITabHandler
 	public void release() 
 	{
 		// TODO: release all resources
+		channel.release();
+		document = null;
+		nodeMap.clear();
 	}
 
 	@Override
-	public synchronized Node getNode(int id) 
+	public Node getNode(int id) 
 	{
+		System.out.println("getNode for id : " + id + " and value seems to be  : " + nodeMap.get(id));
 		return nodeMap.get(id);
 	}
 
 	@Override
-	public synchronized int getNodeId(Node node) throws Exception 
+	public int getNodeId(Node node)
 	{
-		for(Map.Entry<Integer, Node> nodeEntry : nodeMap.entrySet())
-		{
-			Node currentNode = nodeEntry.getValue();
-			if(currentNode.isSameNode(node))
-			{
-				return nodeEntry.getKey();
-			}
-		}
-		throw new Exception("The node being searched for cannot be found");
+		return Integer.parseInt(((Element)node).getAttribute(NODE_ID_ATTR));
 	}
 
 	@Override
-	public synchronized Node getRootNode() 
+	public Node getRootNode() 
 	{
 		return document.getDocumentElement();
 	}
 
 	@Override
-	public synchronized void activate() 
+	public synchronized void activate() throws Exception 
 	{
 		System.out.println("Activate tab : " + tabId);
 		if(active)
 			return;
 		active = true;
-		// TODO: start speaking at current position
+		if(initializedAtleastOnce && (iterator.getPos() != null))
+		{
+			String nodeValueToSend = iterator.getPos().getTextContent();
+			if(nodeValueToSend != null)
+			{
+				Message ttsSpeakMessage = new Message(MessageType.TTS_SPEAK, tabId);
+				ArrayList<String> textParameter = new ArrayList<String>();
+				textParameter.add(nodeValueToSend);
+				ttsSpeakMessage.getArguments().put("text", textParameter);
+				ttsSpeakMessage.getArguments().put("text_id", new ArrayList<String>() {{add(String.valueOf(channel.getNextTextId()));}});
+				channel.send(ttsSpeakMessage);
+			}
+		}
 	}
 
 	@Override

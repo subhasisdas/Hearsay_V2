@@ -5,6 +5,7 @@
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"> 
  
   <script src="hs_msgtypes.js"/>
+  <script src="hs_highlight.js"/>
   <script src="hs_browsehandler.js"/>
   <script src="hs_transport.js"/>
   <script src="hs_message.js"/> 

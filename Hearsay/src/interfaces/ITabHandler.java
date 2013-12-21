@@ -11,7 +11,7 @@ public interface ITabHandler
 	Node getNode(int id);		// null if there is no node with this id
 	int	 getNodeId(Node node) throws Exception;	// 0 if there is no Id or wrong node
 	Node getRootNode();
-	void activate();			// start speaking, switch to active state
+	void activate() throws Exception;			// start speaking, switch to active state
 	void deactivate();			// cancel speaking, switch to inactive state
 	long  getId();
 	long getGlobalId();
