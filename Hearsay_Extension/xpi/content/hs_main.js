@@ -269,13 +269,13 @@ var listener =
 		{
 			log('onDOMInit invoked : ' + handler.getBrowser());
 			//var relevantTabId = getTabId(handler.getBrowser());
-			log("Tab id is : " + tabId);
+			//log("Tab id is : " + tabId);
 			if(tabId)
 			{
 				var initDOMMessage = hsMessage.create(hsMsgType.INIT_DOM, tabId);
 				initDOMMessage.setParameter("URL", [handler.getBrowser().contentDocument.URL]);
 				initDOMMessage.setPayload(xml_dom);
-				log(initDOMMessage.toXMLString());
+				//log(initDOMMessage.toXMLString());
 				transport.send(initDOMMessage.toXMLString());
 			}
 		},

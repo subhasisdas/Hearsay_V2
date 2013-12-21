@@ -95,10 +95,17 @@ function CreateHightlightRect(name, obj_overlay, doc){
  * Removes the highlighter divs from the document object specified.
  * @param {Object} doc Document object from where the highlights are to be cleared
  */function ClearHighlightsDoc(doc) {
+	 log("claering docs");
+	 try{
 	var html_part = doc.getElementsByTagName('html')[0];
 	var elements = doc.getElementsByTagName(_xtHightLightTag);
 	for(var j=0; j<elements.length; j++)
 		html_part.removeChild(elements[j]);
+	log("clearing docs : COMPLETE");
+	 }
+	 catch(e){
+		 log("ClearHighlightsDoc ex :"+ e.getMessage());
+	 }
 }
 
 /**
@@ -111,6 +118,7 @@ function ClearHighlights(clearWindow) {
 		var allFrames = clearWindow.frames;			
 		for (var i=0; i<allFrames.length; i++)
 			ClearHighlightsDoc(allFrames[i].document);
+		log("Cleaned the window: Success ");
 	}
 	catch(e) {
 		log("ClearHighlights() exception: " + e.message);
@@ -125,14 +133,14 @@ function ClearHighlights(clearWindow) {
  * @param {Object} tControl The element to be highlighted
  * @param {Object} style Specifies the properties for the highlighter div to be used
  */
-function SetHighlightControl(/*Element*/ tControl,/*window*/ clearWindow) {
+function SetHighlightControl(/*Element*/ tControl) {
 	var highlight_color = "lightgrey";
 	var highlight_transparencylevel = "40";
 	var highlight_borderColor = "red";
 	var style = new AddOver(highlight_color, 2, highlight_borderColor, 40);
 	//var IGNORED_CLASSNAME = "_ignore_";
 	log("SetHighlightControl : Received "+tControl)
-	ClearHighlights(clearWindow);
+	//ClearHighlights(clearWindow);
 	if(tControl.getAttribute('attr_visibility') != "hidden") {
 		var doc = tControl.ownerDocument;
 		var allHightlights = doc.getElementsByTagName(_xtHightLightTag);

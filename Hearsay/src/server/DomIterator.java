@@ -18,6 +18,7 @@ public class DomIterator implements IDomIterator
 	public DomIterator(ITabHandler t)
 	{
 		tab = t;
+		begin();
 	}
 
 	/**
@@ -26,44 +27,33 @@ public class DomIterator implements IDomIterator
 	 */
 	private Node findTextNodeInSubtree(Node rootNode)
 	{
-		NodeList childNodes = rootNode.getChildNodes();
+		if(rootNode.getNodeName().equals("textelement"))
+			return rootNode;
+		
+		final NodeList childNodes = rootNode.getChildNodes();
 		for(int iter = 0; iter < childNodes.getLength(); iter++)
 		{
-			Node currentNode = childNodes.item(iter);
-			if(currentNode.getNodeName().equals("textelement"))
-			{
-				return currentNode;
-			}
-			else
-			{
-				Node currentNextNode = findTextNodeInSubtree(currentNode);
-				if(currentNextNode != null)
-				{
-					return currentNextNode;
-				}
-			}
+			final Node currentNextNode = findTextNodeInSubtree(childNodes.item(iter));
+			if(currentNextNode != null)
+				return currentNextNode;
 		}
+		
 		return null;
 	}
 
 	@Override
 	public boolean next() 
 	{
-		System.out.println("DOM : Line 1");
-		Node currentPosition = getPos();
-		System.out.println("DOM : Line 2");
+		Node currentPosition = node;
 		if(currentPosition == null)
 		{
 			return false;
 		}
-		System.out.println("DOM : Line 3");
 		Node destinationPosition = null;
 		Node currentNode = currentPosition;
 		Node nextNodeToCheck;
-		System.out.println("DOM : Line 4 with : " + currentNode.getNodeName());
 		do
 		{
-			System.out.println("DOM : Line 5");
 			nextNodeToCheck = currentNode;
 			Node nextSibling = currentNode.getNextSibling();
 			if(nextSibling == null)
@@ -71,7 +61,6 @@ public class DomIterator implements IDomIterator
 				Node parentNode = currentNode.getParentNode();
 				while(parentNode != null)
 				{
-					System.out.println("Parent node : " + parentNode.getNodeName());
 					Node parentNodeSibling = parentNode.getNextSibling();
 					if(parentNodeSibling != null)
 					{
@@ -87,35 +76,22 @@ public class DomIterator implements IDomIterator
 			}
 			if(currentNode.isSameNode(nextNodeToCheck))
 			{
-				System.out.println("DOM : Line 7");
 				//We had no new node when we tried to move
 				break;
 			}
 			currentNode = nextNodeToCheck;
-			System.out.println("DOM : Line 8");
-			if((currentNode.getNodeName()).equals("textelement"))
+			Node prevRelativeNode = findTextNodeInSubtree(currentNode);
+			if(prevRelativeNode != null)
 			{
-				System.out.println("DOM : Line 9 with : " + currentNode.getTextContent());
-				destinationPosition = currentNode;
+				destinationPosition = prevRelativeNode;
 				break;
-			}
-			else
-			{
-				System.out.println("DOM : Line 10");
-				Node prevRelativeNode = findTextNodeInSubtree(currentNode);
-				if(prevRelativeNode != null)
-				{
-					destinationPosition = prevRelativeNode;
-					break;
-				}
 			}
 		}
 		while((currentNode.getParentNode() != null) || (currentNode.getNextSibling() != null));
 
 		if(destinationPosition != null)
 		{
-			//TODO: Check this
-			this.node = destinationPosition;
+			node = destinationPosition;
 			return true;
 		}
 		return false;
@@ -160,19 +136,11 @@ public class DomIterator implements IDomIterator
 				break;
 			}
 			currentNode = nextNodeToCheck;
-			if((currentNode.getNodeName()).equals("textelement"))
+			Node prevRelativeNode = findTextNodeInSubtree(currentNode);
+			if(prevRelativeNode != null)
 			{
-				destinationPosition = currentNode;
+				destinationPosition = prevRelativeNode;
 				break;
-			}
-			else
-			{
-				Node prevRelativeNode = findTextNodeInSubtree(currentNode);
-				if(prevRelativeNode != null)
-				{
-					destinationPosition = prevRelativeNode;
-					break;
-				}
 			}
 		}
 		while((currentNode.getParentNode() != null) || (currentNode.getPreviousSibling() != null));
@@ -189,8 +157,8 @@ public class DomIterator implements IDomIterator
 	@Override
 	public void begin() 
 	{
-		node = tab.getNode(1);
-		node = findTextNodeInSubtree(node);
+		//Initialize the position to the text node within the subtree
+		node = findTextNodeInSubtree(tab.getRootNode());
 	}
 
 	@Override
@@ -203,39 +171,95 @@ public class DomIterator implements IDomIterator
 		//We are now at the last node
 	}
 
+	private Node findTextNodeInSiblings(final Node searchNode)
+	{
+		Node currentNode = searchNode.getNextSibling();
+		while(currentNode != null)
+		{
+			Node tmpNode = findTextNodeInSubtree(currentNode);
+			if(tmpNode != null)
+				return tmpNode;
+
+			currentNode = currentNode.getNextSibling();
+		}
+
+		currentNode = searchNode.getPreviousSibling();
+		while(currentNode != null)
+		{
+			Node tmpNode = findTextNodeInSubtree(currentNode);
+			if(tmpNode != null)
+				return tmpNode;
+
+			currentNode = currentNode.getPreviousSibling();
+		}
+
+		return null;
+	}
+
 	//TODO
 	@Override
-	public boolean onRemove(Node node) 
+	public boolean onRemove(Node nodeToRemove)
 	{
+		assert nodeToRemove != null;
 		//TODO: Implementation based on current position
 		/**
 		 * Check if the node is the same as the current node being spoken out
 		 * Then, we need to recalculate our speaking position and return true
 		 * Else, we return false after removing this node
 		 */
-		if(node.isSameNode(getPos()))
-		{
-			//Recalculate the speaking position to a text node
-
-			return true;
-		}
-		else
-		{
+		if(node==null)
 			return false;
+		
+		if(!nodeToRemove.isSameNode(node))
+			return false;
+		
+		//Recalculate the speaking position to a text node
+		while(nodeToRemove != null)
+		{
+			final Node newPosition = findTextNodeInSiblings(nodeToRemove);
+			if(newPosition != null)
+			{
+				node = newPosition;
+				return true;
+			}
+			nodeToRemove = nodeToRemove.getParentNode();
 		}
+		node = null;
+		return true;
 	}
 
 	@Override
 	public boolean setPos(Node node) 
 	{
-		if(this.node.equals(node))
+		if(this.node.isSameNode(node))
 		{
 			return false;
 		}
 		else
 		{
 			//TODO: Navigate to the closest text node position
-			this.node = node;
+			Node currentNode = node;
+			Node newPosition = null;
+			if(currentNode.getNodeName().equals("textelement"))
+			{
+				newPosition = currentNode;
+			}
+			else
+			{
+				while(currentNode != null)
+				{
+					newPosition = findTextNodeInSiblings(currentNode);
+					if(newPosition != null)
+					{
+						break;
+					}
+					currentNode = currentNode.getParentNode();
+				}
+			}			
+			if(newPosition != null)
+			{
+				this.node = newPosition;
+			}
 			return true;
 		}
 	}

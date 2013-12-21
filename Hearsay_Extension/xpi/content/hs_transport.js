@@ -118,7 +118,7 @@ function hsCreateTransport(/*String*/ host, /*uint16*/ port, /*TransportListener
 				try {
 
 					var avail_bytes = _in.available();
-					log( "avail = " + avail_bytes);
+					//log( "avail = " + avail_bytes);
 					_data ="";
 					_DataLength = 0;
 					//_data += _in.read(avail_bytes);
@@ -141,7 +141,7 @@ function hsCreateTransport(/*String*/ host, /*uint16*/ port, /*TransportListener
 						var message 	 = decodeURIComponent(escape(_data.substr(0, _DataLength)));
 						_data  	 = _data.substr(_DataLength);
 						_DataLength = 0;
-						log( "execute message: \"" + message + "\":" + message.length);
+						//log( "execute message: \"" + message + "\":" + message.length);
 						if(message && (message.length > 0))
 						{
 							listener.onReceive(hsTransportObject,message);

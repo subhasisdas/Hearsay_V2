@@ -86,20 +86,30 @@
 	var obj = {
 			highlight: function(/*String[]*/ ids)
 			{
-				// Clear current highlightning,
+				/*// Clear current highlightning,
 				ClearHighlights(br.contentWindow);
-				log("Windows cleaned ");
+				log("Windows cleaned ");*/
 
 				log("Highlighting the new set" + ids);			
 				// highlight new set of nodes
 
 				for (var index in ids) {
-					log("ids[index] value :"+ index);
-					var nodeId = this.getNode(index);
-					log("nodeId : " + nodeId);
-					ClearHighlights(br.contentWindow);
-					SetHighlightControl(nodeId,br.contentWindow);
+					if(ids[index] == 0 )
+						continue;
+					else
+					{
+						// Clear current highlightning,
+						ClearHighlightsDoc(br.contentDocument);
+						log("Docs cleaned ");
+						log("ids[index] value :"+ ids[index]);
+						var nodeId = this.getNode(ids[index]);
+						log("nodeId : " + nodeId);						
+						SetHighlightControl(nodeId);
+						
+					}
+
 				}
+				
 			},
 			getNode: function(/*String*/ id)
 			{
