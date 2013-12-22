@@ -32,7 +32,6 @@
 		initializeNodeMap(br.contentDocument.documentElement);
 		var xmlDocument = br.contentDocument.implementation.createDocument('http://www.w3.org/1999/xhtml','HTML', null);
 		var xmlPayload = createXMLPayload(xmlDocument, docToSend.documentElement);
-		//log("The xml payload is : " + xmlPayload);
 		listener.onDOMInit(obj , xmlPayload, tabId);
 	}
 
@@ -86,14 +85,11 @@
 	var obj = {
 			highlight: function(/*String[]*/ ids)
 			{
-				/*// Clear current highlightning,
-				ClearHighlights(br.contentWindow);
-				log("Windows cleaned ");*/
-
-				log("Highlighting the new set" + ids);			
+				// Clear current highlightning, 
 				// highlight new set of nodes
-
+				log("Highlighting the new set" + ids);                        
 				for (var index in ids) {
+					//We do not want to highlight entire page
 					if(ids[index] == 0 )
 						continue;
 					else
@@ -102,14 +98,11 @@
 						ClearHighlightsDoc(br.contentDocument);
 						log("Docs cleaned ");
 						log("ids[index] value :"+ ids[index]);
-						var nodeId = this.getNode(ids[index]);
-						log("nodeId : " + nodeId);						
-						SetHighlightControl(nodeId);
-						
+						var nodeObject = this.getNode(ids[index]);
+						log("Node Object : " + nodeObject);                                                
+						SetHighlightControl(nodeObject);
 					}
-
-				}
-				
+				}                
 			},
 			getNode: function(/*String*/ id)
 			{
@@ -160,7 +153,7 @@
 		 * Checking for empty nodes
 		 */
 		//Creates an XML payload in reference to the current node map by traversing the given document
-		//log('Creating payload now for document node  : ' + documentRootNode.nodeName);
+		log('Creating payload now for document node  : ' + documentRootNode.nodeName);
 
 		var internalNodeId = obj.getNodeId(documentRootNode);
 
@@ -192,13 +185,13 @@
 						xmlRootNode.appendChild(elementToAppend);
 					}
 				}
-				//log("Returning xmlRootNode : " + xmlRootNode);
+				log("Returning xmlRootNode : " + xmlRootNode);
 				return xmlRootNode;
 			}
 		}
 		else
 		{
-			//log("Returning null for xmlRootNode : " + documentRootNode.nodeName);
+			log("Returning null for xmlRootNode : " + documentRootNode.nodeName);
 			return null;
 		}
 	}
@@ -206,35 +199,26 @@
 	/**
 	 * Initialize the node map from the document tree provided and filter nodes with the provided filter callback
 	 */
-	function initializeNodeMap(documentRootNode)
+	function initializeNodeMap(root)
 	{
-		//log('Initializing node map for document node : ' + documentRootNode.nodeName + " with value : " + documentRootNode.nodeValue + " and type : " + documentRootNode.nodeType);
-		//Invoke specified filter that checks if the given node must be ignored or not
-		if(ignoreCheckFunction(documentRootNode))
-		{
+		if(ignoreCheckFunction(root))
 			return;
-		}
-		nodeMap[newNodeId] = documentRootNode;
-		documentRootNode._internalNodeId = newNodeId;
+
+		log('Initializing node map for document node : ' + root.nodeName + " with value : " + root.nodeValue + " and type : " + root.nodeType);
+		//Invoke specified filter that checks if the given node must be ignored or not
+		nodeMap[newNodeId] = root;
+		root._internalNodeId = newNodeId;
 		newNodeId++;
-		if(documentRootNode.hasChildNodes())
-		{
-			for(var x=0 ; x < documentRootNode.childNodes.length ; x++)
-			{
-				var childNode = documentRootNode.childNodes[x];
-				if(childNode.nodeType == 3 && childNode.nodeValue.trim() == '')
-				{
-					log("Ignoring empty text node");
-				}
-				else
-				{
-					initializeNodeMap(childNode);
-				}
-			}
-		}
+
+		if(root.hasChildNodes())
+			for(var x=0; x<root.childNodes.length; x++)
+				initializeNodeMap(root.childNodes[x]);
 	}
 
-	function log(msg) {	consoleService.logStringMessage("brhandler] "+msg);	}
+	function log(msg) 
+	{	
+		consoleService.logStringMessage("brhandler] "+msg);	
+	}
 
 	// TODO: add implementation.
 	// use br events to control load page process,
@@ -246,14 +230,14 @@
 
 	if(br.contentDocument.readyState === "complete" || br.contentDocument.readyState === "interactive")
 	{
-		//log("ready state of body : " + doc.body + " " + br.contentDocument.body);s
+		//log("ready state of body : " + doc.body + " " + br.contentDocument.body);
 		log('document loading is now complete : ' + br.contentDocument.readyState + 'with URL as ' + br.contentDocument.URL);
 		docToSend = br.contentDocument;
 		initializeNodeMap(br.contentDocument.documentElement);
 		var xmlDocument = br.contentDocument.implementation.createDocument('http://www.w3.org/1999/xhtml','HTML', null);
 		//log(br.contentDocument.body.hasChildNodes());
 		var xmlPayload = createXMLPayload(xmlDocument, docToSend.documentElement);
-		//log("The payload generated was : " + xmlPayload);
+		log("The payload generated was : " + xmlPayload);
 		listener.onDOMInit(obj , xmlPayload, tabId);
 	}
 	/**

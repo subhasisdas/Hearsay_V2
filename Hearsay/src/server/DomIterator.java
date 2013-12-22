@@ -29,7 +29,7 @@ public class DomIterator implements IDomIterator
 	{
 		if(rootNode.getNodeName().equals("textelement"))
 			return rootNode;
-		
+
 		final NodeList childNodes = rootNode.getChildNodes();
 		for(int iter = 0; iter < childNodes.getLength(); iter++)
 		{
@@ -37,7 +37,7 @@ public class DomIterator implements IDomIterator
 			if(currentNextNode != null)
 				return currentNextNode;
 		}
-		
+
 		return null;
 	}
 
@@ -209,10 +209,10 @@ public class DomIterator implements IDomIterator
 		 */
 		if(node==null)
 			return false;
-		
+
 		if(!nodeToRemove.isSameNode(node))
 			return false;
-		
+
 		//Recalculate the speaking position to a text node
 		while(nodeToRemove != null)
 		{
@@ -246,14 +246,18 @@ public class DomIterator implements IDomIterator
 			}
 			else
 			{
-				while(currentNode != null)
+				newPosition = findTextNodeInSubtree(currentNode);
+				if(newPosition == null)
 				{
-					newPosition = findTextNodeInSiblings(currentNode);
-					if(newPosition != null)
+					while(currentNode != null)
 					{
-						break;
+						newPosition = findTextNodeInSiblings(currentNode);
+						if(newPosition != null)
+						{
+							break;
+						}
+						currentNode = currentNode.getParentNode();
 					}
-					currentNode = currentNode.getParentNode();
 				}
 			}			
 			if(newPosition != null)

@@ -20,8 +20,7 @@
 	var SHIFT_KEY = "Shift"; //"SHIFT";
 	var INS_KEY = "Insert"; //"INS";
 	var iflag= new Boolean(false);//"Insert - play/pause flag"
-	var countIns =0; // "Insert - counts number of keypress"
-
+	
 	//adopted from echoing.js
 	//**
 	// This object defines the text to be spoken out on echoing
@@ -83,28 +82,18 @@
 			tempSpeak += SHIFT_KEY;
 		if (event.altKey == true)
 			tempSpeak += ALT_KEY;
-		//if(iflag)
-
-
+	
 		switch (event.keyCode) {
 		case KeyEvent.DOM_VK_SUBTRACT: //case for underscore
 			if(tempSpeak == SHIFT_KEY + "+")
 				tempSpeak = echoingMessages[event.keyCode];
 			break;
-		case KeyEvent.DOM_VK_INSERT:
-			countIns +=1;
-			log("Count is :" + countIns);
-			if(countIns % 2 == 0){
-				iflag = false;
-				tempSpeak = INS_KEY + "Pause";
-			}
-			else{
-				iflag=true;  //setting the flag if insert was pressed
-				tempSpeak = INS_KEY + "Play" ;
-			}
+		case KeyEvent.DOM_VK_INSERT:			
+				tempSpeak = INS_KEY ;
 			break;
 		default:
-			var keyDescription = echoingMessages[event.keyCode];			
+			var keyDescription = echoingMessages[event.keyCode];
+			break;
 		if(keyDescription == null) {
 			//tempSpeak += String.fromCharCode(event.keyCode);
 		}

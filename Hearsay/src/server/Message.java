@@ -148,24 +148,16 @@ public class Message
 
 	public String writeXML() throws Exception
 	{
-		
 		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 		DocumentBuilder builder =  factory.newDocumentBuilder();
 		Document hearsayXMLMessage = builder.newDocument();
-		
 		Element hearsayMessage = (Element) hearsayXMLMessage.createElement("hearsayMessage");
-		
 		hearsayXMLMessage.appendChild(hearsayMessage);
-		
 		//Add the identifier
 		Element id = hearsayXMLMessage.createElement("tabId");
-		
 		Text idValue = hearsayXMLMessage.createTextNode(Long.toString(this.tabId));
-		
 		id.appendChild(idValue);
-		
 		hearsayMessage.appendChild(id);
-		
 		//Add the message type
 		Element type = hearsayXMLMessage.createElement("type");
 		Text typeValue = hearsayXMLMessage.createTextNode(this.type.toString());
@@ -202,7 +194,6 @@ public class Message
 		//Clone the payload if there is one
 		if(payload != null)
 		{
-			System.out.println("Payload not null in Message.java");
 			Element payloadElement = hearsayXMLMessage.createElement("payload");
 			payloadElement.appendChild(hearsayXMLMessage.importNode(payload, true));
 			hearsayMessage.appendChild(payloadElement);

@@ -1,0 +1,54 @@
+/*
+ * Mouse event handler
+ * 
+ * listener
+ * {
+ * 	[void] onClick: function([hsMouseHandler] handler, [Node] clicked_node, [String] pressed_buttons);
+ * }
+ * 
+ */
+
+/*hsMouseHandler*/ function hsCreateMouseHandler(/*MouseListener*/ listener)
+{
+	var consoleService = Components.classes["@mozilla.org/consoleservice;1"].getService(Components.interfaces.nsIConsoleService);
+
+	function log(msg) {	consoleService.logStringMessage(msg);	}
+
+	var mouseListener = /*void*/function(event)
+	{			
+		// TODO: add Event listeners for mouse "click" event
+		//log("[mouseHandler]: click"+ event.target+ "::" + event.type);
+		if(event.target.getAttribute('elementID')) {
+			var id = event.target.getAttribute('elementID'));
+			log("ELEMENT ID :"+id);
+		}
+		//Sending the identifier of the clicked element
+		if(event.target.getAttribute('identifier'))
+		{
+			var id = (event.target.getAttribute('identifier'));
+			log("identifier id :"+id)
+		}
+		else if(event.target.parentNode && event.target.parentNode.getAttribute('identifier'))
+		{
+			var id = (event.target.parentNode.getAttribute('identifier'));
+			log("Parent node identifier :"+id);
+		}
+		
+		listener.onClick(mHandler,null,"click");
+	};
+
+
+	//registering the mouse listener
+	window.addEventListener('click', mouseListener, false);
+
+	var mHandler =
+	{
+			release: /*void*/ function()
+			{
+				// TODO: release listeners for mouse click event
+				window.removeEventListener("click", mouseListener, false);
+
+			}
+	};
+	return mHandler;
+}

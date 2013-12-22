@@ -194,3 +194,34 @@ function hsCreateTTS(listener)
 	return tts_obj;
 };
 
+
+/*
+ * Temporary listeners for toolbar buttons for testing.
+ */
+/*function onLoad() 
+{
+	var consoleService = Components.classes["@mozilla.org/consoleservice;1"].getService(Components.interfaces.nsIConsoleService);
+
+	function log(msg) {	consoleService.logStringMessage("tts_test] "+msg);	}
+
+	var listener =
+	{
+		onEndSpeak: function(obj, id)
+		{
+			log("onEndSpeak "+id);
+		}
+	};
+
+	var tts = hsCreateTTS(listener);
+	document.getElementById('speak').addEventListener('click',function() {
+		tts.speak('Speaking test Speaking Test Speaking test Speaking Test Speaking test Speaking Test ',12);
+	},false);
+	document.getElementById('cancel').addEventListener('click',function() {
+		tts.cancel(12);
+	},false);
+	document.getElementById('release').addEventListener('click',function() {
+		tts.release();
+	},false);
+}
+
+window.addEventListener("load", onLoad, false);*/

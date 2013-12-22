@@ -17,8 +17,10 @@ var tabMap = {};	// map tabId: tab
 var activeTabBrowserHandler = null;
 var consoleService = Components.classes["@mozilla.org/consoleservice;1"].getService(Components.interfaces.nsIConsoleService);
 
-function log(msg) {	consoleService.logStringMessage("main] "+msg);	}
-
+function log(msg) 
+{	
+	consoleService.logStringMessage("main] "+msg);	
+}
 function getTabId(/*Browser*/ br)
 {
 	for(var tabId in tabMap)
@@ -32,14 +34,16 @@ function getTabId(/*Browser*/ br)
 
 function ignoreCheckFunction(/*Node*/ node)
 {
-	if(node.nodeName == 'SCRIPT' || node.nodeName == 'script' || node.nodeType == 8)
-	{
+	if(node.nodeName == 'SCRIPT' || node.nodeName == 'script')
 		return true;
-	}
-	else
-	{
-		return false;
-	}
+	
+	if(node.nodeType == 8)	// comment node
+		return true;
+	
+	if(node.nodeType == 3 && node.nodeValue.replace(/^\s+/, '') == '')	// empty text nodes
+		return true;
+	
+	return false;
 }
 
 function processNewTab(/*int*/ newTabId, /*Browser*/ browser)
@@ -125,14 +129,13 @@ var listener =
 		{
 			log('onConnect on listener in main was invoked');
 			newTabId = 1;
-			log('onConnect 1');
 			// Initialize keyboard, mouse and tts components
 			log("initializing the handlers");
 			tts = hsCreateTTS(listener);
 			mouse = hsCreateMouseHandler(listener);
 			keyboard = hsCreateKeyboardHandler(listener);	
 			log("handlers created");
-
+			
 			//enumerate already existed tabs and send INIT_DOMs
 			enumerateExistingTabs(gBrowser);
 			if(gBrowser.selectedTab)
@@ -190,10 +193,10 @@ var listener =
 			switch(msg.getType())
 			{
 			case hsMsgType.TTS_SPEAK:
-
+				log("Receive TTS_SPEAK message : " + message);
 				var text = msg.getParameter("text");
 				var text_id = msg.getParameter("text_id");				
-				text = text && text.length>0 && text[1];
+				text = text && text.length>0 && text[1];				
 				if(text)
 				{
 					text_id = text_id && text_id.length>0 && text_id[1];
@@ -204,7 +207,7 @@ var listener =
 				// TODO: implement it
 				break;
 			case hsMsgType.SET_HIGHLIGHT:
-				log("hsMsgType.SET_HIGHLIGHT: Received")
+				log("hsMsgType.SET_HIGHLIGHT: Received");
 				var tab = tabMap[msg.getId()];
 				log("tab"+tab+":"+msg.getParameter("node_id"));
 				if(tab)
@@ -218,18 +221,16 @@ var listener =
 		// TTS events -----------------------------------------------------------------------
 		onEndSpeak: /*void*/function(/*ttsHandler*/tts, /*String*/text_id)
 		{
-			log("onEndSpeak "+text_id );
 			var activeTabId =  getTabId(gBrowser.getBrowserForTab(gBrowser.selectedTab));
 			var activeTabMessage = hsMessage.create(hsMsgType.TTS_DONE, activeTabId);
 			activeTabMessage.setParameter("text_id", [text_id]);
-			//if(!pause)
 			transport.send(activeTabMessage.toXMLString());
 		},
 		// ----------------------------------------------------------------------------------
 		// TODO: add keyboard, mouse event handlers
 		onKeyPress: /*void*/function(/*keybHandler*/keyboard, /*String*/key)
 		{
-			// TODO: send hsMsgType.KEY message
+	
 			// TODO: send hsMsgType.KEY message
 			log(" onKeyPress message sent!"+ key);
 			var activeTabId =  getTabId(gBrowser.getBrowserForTab(gBrowser.selectedTab));
@@ -248,15 +249,19 @@ var listener =
 		},
 		onClick : /*void*/function(/*[hsMouseHandler]*/ mouse, /*[Node]*/ clicked_node, /*[String]*/ button)
 		{
+			log("onClick start point");
 			log(" onClick message sent!"+ button);
-			//tts.speak("click",1);
 			var activeTabId =  getTabId(gBrowser.getBrowserForTab(gBrowser.selectedTab));
-			if(activeTabId)
+	
+			var nodeId = activeTabBrowserHandler.getNodeId(clicked_node);
+			log("Node Id of clicked node is : " + nodeId);
+			if(nodeId != null && activeTabId != null)
 			{
 				log("onClick message sent!");
 				var activeTabMessage = hsMessage.create(hsMsgType.MOUSE, activeTabId);
-				activeTabMessage.setParameter("click", [button]);
-				//log("msg sent is :"+activeTabMessage.toXMLString())
+				activeTabMessage.setParameter("id", [nodeId]);
+				log("msg sent is :"+activeTabMessage.toXMLString());
+				var nodeBeingClicked = activeTabBrowserHandler.getNode(nodeId);
 				transport.send(activeTabMessage.toXMLString());
 				//log("onClick message sent!"+ msg.toXMLString());
 			}
@@ -268,14 +273,13 @@ var listener =
 		onDOMInit: /*void*/function(/*hsBrowserHandler*/ handler, /*Node*/ xml_dom, /*long*/ tabId)
 		{
 			log('onDOMInit invoked : ' + handler.getBrowser());
-			//var relevantTabId = getTabId(handler.getBrowser());
-			//log("Tab id is : " + tabId);
+			log("Tab id is : " + tabId);
 			if(tabId)
 			{
 				var initDOMMessage = hsMessage.create(hsMsgType.INIT_DOM, tabId);
 				initDOMMessage.setParameter("URL", [handler.getBrowser().contentDocument.URL]);
 				initDOMMessage.setPayload(xml_dom);
-				//log(initDOMMessage.toXMLString());
+				log(initDOMMessage.toXMLString());
 				transport.send(initDOMMessage.toXMLString());
 			}
 		},
@@ -290,10 +294,9 @@ function onLoad()
 	window.removeEventListener("load", onLoad, false);
 	window.addEventListener("unload", onUnload, false);
 	transport = hsCreateTransport("localhost", /*port*/13000, /*TransportListener*/listener);
-	log("transport initiated");
 }
 
-//do not forget to release all resources!
+// do not forget to release all resources!
 function onUnload()
 {
 	window.removeEventListener("unload", onUnload, false);
@@ -304,5 +307,5 @@ function onUnload()
 	tts.release();
 }
 
-//TODO: add gBrowser event listeners
+// TODO: add gBrowser event listeners
 window.addEventListener("load", onLoad, false);

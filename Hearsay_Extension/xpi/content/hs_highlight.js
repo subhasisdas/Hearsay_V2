@@ -95,7 +95,7 @@ function CreateHightlightRect(name, obj_overlay, doc){
  * Removes the highlighter divs from the document object specified.
  * @param {Object} doc Document object from where the highlights are to be cleared
  */function ClearHighlightsDoc(doc) {
-	 log("claering docs");
+	 log("clearing docs");
 	 try{
 	var html_part = doc.getElementsByTagName('html')[0];
 	var elements = doc.getElementsByTagName(_xtHightLightTag);
@@ -135,9 +135,9 @@ function ClearHighlights(clearWindow) {
  */
 function SetHighlightControl(/*Element*/ tControl) {
 	var highlight_color = "lightgrey";
-	var highlight_transparencylevel = "40";
+	var highlight_transparencylevel = "30";
 	var highlight_borderColor = "red";
-	var style = new AddOver(highlight_color, 2, highlight_borderColor, 40);
+	var style = new AddOver(highlight_color, 2, highlight_borderColor, 30);
 	//var IGNORED_CLASSNAME = "_ignore_";
 	log("SetHighlightControl : Received "+tControl)
 	//ClearHighlights(clearWindow);
@@ -149,7 +149,7 @@ function SetHighlightControl(/*Element*/ tControl) {
 			allHightlights = [doc.createElement(_xtHightLightTag)];
 			allHightlights[0].setAttribute("classname", IGNORED_CLASSNAME);
 			allHightlights[0].setAttribute("id", _xtHightLightTag);
-			allHightlights[0].style.visibility = "visible";				
+			allHightlights[0].style.visibility = "visible";	
 			doc.getElementsByTagName('html')[0].appendChild(allHightlights[0]);						
 	    }
 	    

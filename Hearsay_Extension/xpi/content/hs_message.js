@@ -10,7 +10,7 @@
  */
 
 var hsMessage = (function()
-		{
+{
 	const HS_MSG_TAG 	= "hearsayMessage";
 	const HS_MSG_ID	 	= "tabId";
 	const HS_MSG_TYPE 	= "type";
@@ -20,14 +20,14 @@ var hsMessage = (function()
 	const HS_PARAMETER_NAME = "parameterName";
 	const HS_PARAMETER_VALUES = "parameterValues";
 	const HS_PARAMETER_VALUE = "parameterValue";
-
+	
 	return {
 		create: /*hsMessage*/ function(/*MsgType*/ type, /*int*/ tabId)
 		{
-			// message private data
+		// message private data
 			var/*Node*/ payload;
 			var/*Map*/ parameters = {};
-
+			
 			return {
 				getId:     /*int*/ function() { return tabId; },
 				getType:	/*String*/ function() {return type; },
@@ -81,6 +81,8 @@ var hsMessage = (function()
 		{
 			parser = new DOMParser();
 			xmlDoc = parser.parseFromString(xml_string,"text/xml");
+			try
+			{
 			var tabId = xmlDoc.getElementsByTagName(HS_MSG_ID)[0].childNodes[0].nodeValue;
 			var messageType = xmlDoc.getElementsByTagName(HS_MSG_TYPE)[0].childNodes[0].nodeValue;
 			var parameterList = xmlDoc.getElementsByTagName(HS_PARAMETERS)[0].getElementsByTagName(HS_PARAMETER);
@@ -102,6 +104,11 @@ var hsMessage = (function()
 			if(payloadElementList && payloadElementList.length == 1)
 			{
 				messageReference.setPayload(payloadElementList[0].childNodes[0]);
+			}
+			}
+			catch(e)
+			{
+				log("ERROR OBSERVED : " + e);
 			}
 			return messageReference;
 		}

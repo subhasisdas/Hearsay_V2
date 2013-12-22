@@ -8,6 +8,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.w3c.dom.Node;
+
 import interfaces.ICommunicatorListener;
 import interfaces.IChannelListener;
 import interfaces.IMessageChannel;
@@ -91,8 +93,8 @@ public class Dispatcher extends Loggable implements ICommunicatorListener, IChan
 	@Override
 	public synchronized void onReceive(IMessageChannel sp, Message msg) throws Exception
 	{
-		//System.out.println("The mesasge that has been received by dispatcher is : " + msg.writeXML());
-		//System.out.println("Current state of tabs is : " + tabs.toString());
+		System.out.println("The mesasge that has been received by dispatcher is : " + msg.writeXML());
+		System.out.println("Current state of tabs is : " + tabs.toString());
 		// re-build msg id:
 		final long globalTabId = msg.tabId*100000+sp.getId();
 		switch(msg.type)
@@ -101,21 +103,15 @@ public class Dispatcher extends Loggable implements ICommunicatorListener, IChan
 		case KEY:		// Parameters: "press": a pressed key name. This message will be sent with active tab
 			//Sending TTS_SPEAK to extension
 			Message ttsSpeakMessage = new Message(MessageType.TTS_SPEAK, 0);
-
 			ArrayList<String> textToSpeak = new ArrayList<String>();
 			String keyPressed = msg.getArguments().get("press").get(0);
-			if(keyPressed.equals("keyPressedInsertPause"))
+			if(keyPressed.equals("keyPressedInsert"))
 			{
-				System.out.println("Time to stop tts");
-				//Message ttsCancelMessage = new Message(MessageType.TTS_CANCEL, /*text_id*/);
-
+				if(activeTab != null && (activeTab.getGlobalId() == globalTabId))
+				{
+					activeTab.onReceive(msg);
+				}
 			}
-			if(keyPressed.equals("keyPressedInsertPlay"))
-			{
-				System.out.println("Time to play tts");
-			}
-
-			System.out.println("keyPressed :"+keyPressed);
 			textToSpeak.add(keyPressed);
 			//textToSpeak.add(keyPressed);
 			ArrayList<String> textIdParameter = new ArrayList<String>();
@@ -125,47 +121,20 @@ public class Dispatcher extends Loggable implements ICommunicatorListener, IChan
 			//System.out.println("ttsSpeakMessage being sent :"+ttsSpeakMessage.getArguments().values());
 			sp.send(ttsSpeakMessage);
 			break;
-		case MOUSE:			// Parameters: "id" - clicked node id, extra parameters - pressed mouse button state. 
-			//Sending TTS_SPEAK to extension
-			Message ttsSpeakMessageMouse = new Message(MessageType.TTS_SPEAK, msg.tabId);
-			ArrayList<String> textToSpeakMouse = new ArrayList<String>();
-			String mouseClick= msg.getArguments().get("click").get(0);
-
-			System.out.println("mouseClick: "+mouseClick);
-			textToSpeakMouse.add(mouseClick);
-
-			//textToSpeak.add(keyPressed);
-			ArrayList<String> textIdParameterMouse = new ArrayList<String>();
-			textIdParameterMouse.add(Long.toString(globalTabId));
-			ttsSpeakMessageMouse.getArguments().put("text", textToSpeakMouse);
-			ttsSpeakMessageMouse.getArguments().put("text_id", textIdParameterMouse);
-			//System.out.println("ttsSpeakMessage being sent :"+ttsSpeakMessageMouse.getArguments().containsValue(0));
-			sp.send(ttsSpeakMessageMouse);
+		case MOUSE:			// Parameters: "id" - clicked node id, extra parameters - pressed mouse button state.
+			if(activeTab != null && (activeTab.getGlobalId() == globalTabId))
+			{
+				activeTab.onReceive(msg);
+			}
 			break;
 		case FOCUS:			// Parameters: "id" - new currently selected node by browser.
 		case TTS_DONE:	// parameters: "text_id" - text with text_id has been spoken.
-			System.out.println("In TTS_DONE case");
-			try
+			if(activeTab != null && activeTab.getGlobalId()==globalTabId)
 			{
-				if(activeTab != null && activeTab.getGlobalId()==globalTabId)
-				{
-					System.out.println("Active tab is being delivered a TTS_DONE message");
-					activeTab.onReceive(msg);
-				}
-				System.out.println("Global tab Id : " + globalTabId + " : " + activeTab.getId());
+				System.out.println("Active tab is being delivered a TTS_DONE message");
+				activeTab.onReceive(msg);
 			}
-			catch(Exception tabHandlingException)
-			{
-				System.out.println(tabHandlingException);
-				try
-				{
-					log(1, "An error was encountered while handling a message of type TTS_DONE : " + msg.writeXML());
-				}
-				catch (Exception e)
-				{
-					System.out.println(e);
-				}
-			}
+			System.out.println("Global tab Id : " + globalTabId + " : " + activeTab.getId());
 			break;
 			// Browser handler events. Will be produced by main part of the extension.
 			// Will be processed by Dispatcher
@@ -212,20 +181,8 @@ public class Dispatcher extends Loggable implements ICommunicatorListener, IChan
 				return;
 			}
 			//Deliver the message to the relevant tab handler and don't handle just crash / disconnect
-			try
-			{
-				tabHandler.onReceive(msg);
-			}
-			catch(Exception e)
-			{
-				try
-				{
-					log(1, "An exception was encountered on handling the INIT_DOM message : " + msg.writeXML());
-				}
-				catch (Exception e1)
-				{
-				}
-			}
+			
+			tabHandler.onReceive(msg);
 			break;
 		case UPDATE_DOM:		// parameters: "parent_id" - id of the parent node of updated subtree, "sibling_id" - previous (or left) sibling of the updated subtree.
 			// 	payload - the serialized subtree. Note: subframes of the document will be sent as updates for subtree.

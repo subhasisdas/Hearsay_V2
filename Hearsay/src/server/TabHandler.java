@@ -7,10 +7,8 @@ import java.util.Map;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
-import org.w3c.dom.DOMException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
@@ -31,6 +29,7 @@ public class TabHandler implements ITabHandler
 	private IDomIterator iterator = null;
 	private boolean active = false;
 	private boolean initializedAtleastOnce = false;
+	private boolean pauseMode = false;
 
 	public TabHandler(long gId, long id, IMessageChannel ch)
 	{
@@ -119,14 +118,12 @@ public class TabHandler implements ITabHandler
 						ttsSpeakMessage.getArguments().put("text_id", new ArrayList<String>() {{add(String.valueOf(channel.getNextTextId()));}});
 						channel.send(ttsSpeakMessage);
 
-
 						System.out.println("Sending Hightlight Node");
 						//sending the highlight text
 						Message highlightMessage = new Message(MessageType.SET_HIGHLIGHT, tabId);
 						ArrayList<String> nodeToHighlight = new ArrayList<String>();
 						if(iterator.getPos().getNodeName().equals("textelement"))
 						{
-							//System.out.println("Line 2");
 							int nodeIdToSend = getNodeId(iterator.getPos().getParentNode());
 							nodeToHighlight.add(Integer.toString(nodeIdToSend));
 							highlightMessage.getArguments().put("node_id", nodeToHighlight);
@@ -140,7 +137,7 @@ public class TabHandler implements ITabHandler
 							channel.send(highlightMessage);
 							System.out.println("Highlight Message sent at INIT_DOM"); 
 						}
-							
+
 					}
 				}
 				initializedAtleastOnce = true;
@@ -148,6 +145,120 @@ public class TabHandler implements ITabHandler
 			else
 			{
 				throw new Exception("An INIT DOM message was received with an invalid payload");
+			}
+			break;
+		case KEY:
+			if(active)
+			{
+				Message ttsSpeakMessage = new Message(MessageType.TTS_SPEAK, tabId);
+				ArrayList<String> textToSpeak = new ArrayList<String>();
+				String keyPressed = msg.getArguments().get("press").get(0);
+				if(keyPressed != null & !keyPressed.isEmpty())
+				{
+					if(pauseMode)
+					{
+						pauseMode = false;
+						String nodeValueToSend = iterator.getPos().getTextContent();
+						if(nodeValueToSend != null)
+						{
+							Message ttsResumeSpeakMessage = new Message(MessageType.TTS_SPEAK, tabId);
+							ArrayList<String> textParameter = new ArrayList<String>();
+							textParameter.add(nodeValueToSend);
+							ArrayList<String> textIdParameter = new ArrayList<String>();
+							textIdParameter.add(Long.toString(globalId));
+							ttsResumeSpeakMessage.getArguments().put("text", textParameter);
+							ttsResumeSpeakMessage.getArguments().put("text_id", textIdParameter);
+							System.out.println("Now sending the next message: !" + nodeValueToSend);
+							channel.send(ttsResumeSpeakMessage);
+
+							System.out.println("Sending Hightlight Node");
+							//sending the highlight text
+							Message highlightMessage = new Message(MessageType.SET_HIGHLIGHT, tabId);
+							ArrayList<String> nodeToHighlight = new ArrayList<String>();
+							if(iterator.getPos().getNodeName().equals("textelement"))
+							{
+								int nodeIdToSend = getNodeId(iterator.getPos().getParentNode());
+								nodeToHighlight.add(Integer.toString(nodeIdToSend));
+								highlightMessage.getArguments().put("node_id", nodeToHighlight);
+								channel.send(highlightMessage);
+								System.out.println("Highlight Message sent at PAUSE DISABLED");
+							}
+							else{
+								int nodeIdToSend = getNodeId(iterator.getPos());
+								nodeToHighlight.add(Integer.toString(nodeIdToSend));
+								highlightMessage.getArguments().put("node_id", nodeToHighlight);
+								channel.send(highlightMessage);
+								System.out.println("Highlight Message sent at PAUSE DISABLED"); 
+							}
+						}
+						//textToSpeak.add("PLAY");
+						//ArrayList<String> textIdParameter = new ArrayList<String>();
+						//ttsSpeakMessage.getArguments().put("text", textToSpeak);
+						//ttsSpeakMessage.getArguments().put("text_id", new ArrayList<String>() {{add(String.valueOf(channel.getNextTextId()));}});
+						//System.out.println("ttsSpeakMessage being sent :"+ttsSpeakMessage.getArguments().values());
+						//channel.send(ttsSpeakMessage);
+					}
+					else
+					{
+						pauseMode = true;
+						System.out.println("PAUSE MODE ENABLED");
+						//textToSpeak.add("PAUSE");
+						//ArrayList<String> textIdParameter = new ArrayList<String>();
+						//ttsSpeakMessage.getArguments().put("text", textToSpeak);
+						//ttsSpeakMessage.getArguments().put("text_id", new ArrayList<String>() {{add(String.valueOf(channel.getNextTextId()));}});
+						//System.out.println("ttsSpeakMessage being sent :"+ttsSpeakMessage.getArguments().values());
+						//channel.send(ttsSpeakMessage);
+					}
+				}
+				break;
+			}
+		case MOUSE:
+			int nodeClickedId = Integer.parseInt(msg.getArguments().get("id").get(0));
+			Node newPosition = nodeMap.get(nodeClickedId);
+			String nodeContentToSend = null;
+			if(newPosition != null)
+			{
+				boolean positionUpdated = iterator.setPos(newPosition);
+				if(positionUpdated)
+				{
+					Node currentNode = iterator.getPos();
+					if(currentNode != null)
+					{
+						nodeContentToSend = currentNode.getTextContent();
+					}
+					if(nodeContentToSend != null)
+					{
+						Message ttsMouseSpeakMessage = new Message(MessageType.TTS_SPEAK, tabId);
+						ArrayList<String> textParameter = new ArrayList<String>();
+						textParameter.add(nodeContentToSend);
+						ArrayList<String> textIdParameter = new ArrayList<String>();
+						textIdParameter.add(Long.toString(globalId));
+						ttsMouseSpeakMessage.getArguments().put("text", textParameter);
+						ttsMouseSpeakMessage.getArguments().put("text_id", textIdParameter);
+						channel.send(ttsMouseSpeakMessage);
+						
+						System.out.println("Sending Hightlight Node");
+						//sending the highlight text
+						Message highlightMessage = new Message(MessageType.SET_HIGHLIGHT, tabId);
+						ArrayList<String> nodeToHighlight = new ArrayList<String>();
+						if(iterator.getPos().getNodeName().equals("textelement"))
+						{
+							int nodeIdToSend = getNodeId(iterator.getPos().getParentNode());
+							nodeToHighlight.add(Integer.toString(nodeIdToSend));
+							highlightMessage.getArguments().put("node_id", nodeToHighlight);
+							channel.send(highlightMessage);
+							System.out.println("Highlight Message sent at MOUSE CLICK");
+						}
+						else{
+							int nodeIdToSend = getNodeId(iterator.getPos());
+							nodeToHighlight.add(Integer.toString(nodeIdToSend));
+							highlightMessage.getArguments().put("node_id", nodeToHighlight);
+							channel.send(highlightMessage);
+							System.out.println("Highlight Message sent at MOUSE CLICK"); 
+						}
+
+					}
+				}
 			}
 			break;
 		case UPDATE_DOM:
@@ -166,7 +277,8 @@ public class TabHandler implements ITabHandler
 			// TODO: update Docunent. if iterator points to this input element,
 			// re-read its value.
 		case TTS_DONE:
-			if(active)
+			System.out.println("Received a TTS_DONE message with pauseMode : " + pauseMode);
+			if(active && !pauseMode)
 			{
 				if(iterator.next())
 				{
@@ -176,23 +288,24 @@ public class TabHandler implements ITabHandler
 						Message ttsSpeakMessage = new Message(MessageType.TTS_SPEAK, tabId);
 						ArrayList<String> textParameter = new ArrayList<String>();
 						textParameter.add(nodeValueToSend);
+						ArrayList<String> textIdParameter = new ArrayList<String>();
+						textIdParameter.add(Long.toString(globalId));
 						ttsSpeakMessage.getArguments().put("text", textParameter);
-						ttsSpeakMessage.getArguments().put("text_id", new ArrayList<String>() {{add(String.valueOf(channel.getNextTextId()));}});
+						ttsSpeakMessage.getArguments().put("text_id", textIdParameter);
+						System.out.println("Now sending the next message: !" + nodeValueToSend);
 						channel.send(ttsSpeakMessage);
 
-						System.out.println("Sending Hightlight Node");
+						System.out.println("Sending Hightlight Node TTS DONE");
 						//sending the highlight text
 						Message highlightMessage = new Message(MessageType.SET_HIGHLIGHT, tabId);
 						ArrayList<String> nodeToHighlight = new ArrayList<String>();
-
 						if(iterator.getPos().getNodeName().equals("textelement"))
 						{
-							//System.out.println("Line 2");
 							int nodeIdToSend = getNodeId(iterator.getPos().getParentNode());
 							nodeToHighlight.add(Integer.toString(nodeIdToSend));
 							highlightMessage.getArguments().put("node_id", nodeToHighlight);
 							channel.send(highlightMessage);
-							System.out.println("Highlight Message sent in TTS_DONE");
+							System.out.println("Highlight Message sent at TTS_DONE");
 						}
 						else{
 							int nodeIdToSend = getNodeId(iterator.getPos());
@@ -201,7 +314,6 @@ public class TabHandler implements ITabHandler
 							channel.send(highlightMessage);
 							System.out.println("Highlight Message sent at TTS_DONE"); 
 						}
-
 					}
 				}
 			}
@@ -246,7 +358,7 @@ public class TabHandler implements ITabHandler
 		if(active)
 			return;
 		active = true;
-		if(initializedAtleastOnce && (iterator.getPos() != null))
+		if(!pauseMode && initializedAtleastOnce && (iterator.getPos() != null))
 		{
 			String nodeValueToSend = iterator.getPos().getTextContent();
 			if(nodeValueToSend != null)
@@ -254,9 +366,31 @@ public class TabHandler implements ITabHandler
 				Message ttsSpeakMessage = new Message(MessageType.TTS_SPEAK, tabId);
 				ArrayList<String> textParameter = new ArrayList<String>();
 				textParameter.add(nodeValueToSend);
+				ArrayList<String> textIdParameter = new ArrayList<String>();
+				textIdParameter.add(Long.toString(globalId));
 				ttsSpeakMessage.getArguments().put("text", textParameter);
-				ttsSpeakMessage.getArguments().put("text_id", new ArrayList<String>() {{add(String.valueOf(channel.getNextTextId()));}});
+				ttsSpeakMessage.getArguments().put("text_id", textIdParameter);
 				channel.send(ttsSpeakMessage);
+
+				System.out.println("Sending Hightlight Node Activate");
+				//sending the highlight text
+				Message highlightMessage = new Message(MessageType.SET_HIGHLIGHT, tabId);
+				ArrayList<String> nodeToHighlight = new ArrayList<String>();
+				if(iterator.getPos().getNodeName().equals("textelement"))
+				{
+					int nodeIdToSend = getNodeId(iterator.getPos().getParentNode());
+					nodeToHighlight.add(Integer.toString(nodeIdToSend));
+					highlightMessage.getArguments().put("node_id", nodeToHighlight);
+					channel.send(highlightMessage);
+					System.out.println("Highlight Message sent at ACTIVATE");
+				}
+				else{
+					int nodeIdToSend = getNodeId(iterator.getPos());
+					nodeToHighlight.add(Integer.toString(nodeIdToSend));
+					highlightMessage.getArguments().put("node_id", nodeToHighlight);
+					channel.send(highlightMessage);
+					System.out.println("Highlight Message sent at ACTIVATE"); 
+				}
 			}
 		}
 	}

@@ -21,9 +21,8 @@ public class Loggable {
 	public void log(int loglevel, String message) { 
 		if(loglevel<=_LogLevel)
 		{
-			// System.out.println(_LinePrefix + message);
 			_sysout.println(_LinePrefix + message);
-			// ProgressLogger.getInstance().debug(_LinePrefix + message);
+			
 		}	
 	}
 }

@@ -116,36 +116,36 @@ function hsCreateTransport(/*String*/ host, /*uint16*/ port, /*TransportListener
 	{	
 			onInputStreamReady:	function(/*nsIAsyncInputStream*/ aStream) {
 				try {
-
+					log("onInputStreamReady is invoked");
 					var avail_bytes = _in.available();
-					//log( "avail = " + avail_bytes);
 					_data ="";
 					_DataLength = 0;
 					//_data += _in.read(avail_bytes);
 					_data += _in.readBytes(avail_bytes);
-
 					for(;;) {
 						if(_DataLength==0) {	// // read length
-							// log("Really readed: " + _data.length);
+							log("Really read: " + _data.length);
 							if(_data.length<8)
 								break;
-
 							_DataLength = _data.substr(0, 8);
 							_data 		 = _data.substr(8);
-							// log("Message length detected = " + _DataLength); 
+							log("Message length detected = " + _DataLength); 
 						}
-
+						log("DataLength is : " + _DataLength);
+						log("_data is : " + _data);
 						if(_data.length<_DataLength)
 							break;			  				
-
+						log("_data.substr(0, _DataLength) : "+_data.substr(0, _DataLength));
 						var message 	 = decodeURIComponent(escape(_data.substr(0, _DataLength)));
+						log("Message decoded is : " + message);
 						_data  	 = _data.substr(_DataLength);
 						_DataLength = 0;
-						//log( "execute message: \"" + message + "\":" + message.length);
-						if(message && (message.length > 0))
+						log( "execute message: \"" + message.toXML + "\":" + message.length + " : " + _data.length);
+						listener.onReceive(hsTransportObject,message);
+						/*if(message != null && message.length > 0)
 						{
-							listener.onReceive(hsTransportObject,message);
-						}
+							
+						}*/
 					}
 					_InStream.asyncWait(asyncWaitEvent, 0, 0, hstThreadManager.mainThread);
 				}
