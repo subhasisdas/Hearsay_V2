@@ -86,8 +86,7 @@
 			highlight: function(/*String[]*/ ids)
 			{
 				// Clear current highlightning, 
-				// highlight new set of nodes
-				log("Highlighting the new set" + ids);                        
+				// highlight new set of nodes				         
 				for (var index in ids) {
 					//We do not want to highlight entire page
 					if(ids[index] == 0 )
@@ -95,11 +94,8 @@
 					else
 					{
 						// Clear current highlightning,
-						ClearHighlightsDoc(br.contentDocument);
-						log("Docs cleaned ");
-						log("ids[index] value :"+ ids[index]);
-						var nodeObject = this.getNode(ids[index]);
-						log("Node Object : " + nodeObject);                                                
+						ClearHighlightsDoc(br.contentDocument);						
+						var nodeObject = this.getNode(ids[index]);						                                              
 						SetHighlightControl(nodeObject);
 					}
 				}                
@@ -230,7 +226,6 @@
 
 	if(br.contentDocument.readyState === "complete" || br.contentDocument.readyState === "interactive")
 	{
-		//log("ready state of body : " + doc.body + " " + br.contentDocument.body);
 		log('document loading is now complete : ' + br.contentDocument.readyState + 'with URL as ' + br.contentDocument.URL);
 		docToSend = br.contentDocument;
 		initializeNodeMap(br.contentDocument.documentElement);

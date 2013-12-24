@@ -93,7 +93,7 @@
 			break;
 		default:
 			var keyDescription = echoingMessages[event.keyCode];
-			break;
+			//break;
 		if(keyDescription == null) {
 			//tempSpeak += String.fromCharCode(event.keyCode);
 		}
@@ -108,7 +108,7 @@
 	var keyBdListener =	 /*void*/function(event)
 	{			
 		// TODO: add Event listeners for keyboard "press" event
-		var tempSpeak="keyPressed";
+		var tempSpeak="keyPressed ";
 		tempSpeak += getHumanReadableKey(event);
 
 
@@ -124,9 +124,9 @@
 			var code = event.charCode || event.keyCode;
 			tempSpeak += String.fromCharCode(code);
 		}
-
-		tempSpeak = tempSpeak.replace(/\s+/g, '');
-		log("key pressed! "+tempSpeak);
+		
+		//tempSpeak = tempSpeak.replace(/\s+/g, '');
+		//log("key pressed! "+tempSpeak);
 		listener.onKeyPress(keyBHandle,tempSpeak);
 
 	};

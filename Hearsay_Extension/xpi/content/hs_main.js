@@ -36,13 +36,13 @@ function ignoreCheckFunction(/*Node*/ node)
 {
 	if(node.nodeName == 'SCRIPT' || node.nodeName == 'script')
 		return true;
-	
+
 	if(node.nodeType == 8)	// comment node
 		return true;
-	
+
 	if(node.nodeType == 3 && node.nodeValue.replace(/^\s+/, '') == '')	// empty text nodes
 		return true;
-	
+
 	return false;
 }
 
@@ -135,7 +135,7 @@ var listener =
 			mouse = hsCreateMouseHandler(listener);
 			keyboard = hsCreateKeyboardHandler(listener);	
 			log("handlers created");
-			
+
 			//enumerate already existed tabs and send INIT_DOMs
 			enumerateExistingTabs(gBrowser);
 			if(gBrowser.selectedTab)
@@ -230,7 +230,7 @@ var listener =
 		// TODO: add keyboard, mouse event handlers
 		onKeyPress: /*void*/function(/*keybHandler*/keyboard, /*String*/key)
 		{
-	
+
 			// TODO: send hsMsgType.KEY message
 			log(" onKeyPress message sent!"+ key);
 			var activeTabId =  getTabId(gBrowser.getBrowserForTab(gBrowser.selectedTab));
@@ -241,7 +241,7 @@ var listener =
 				{
 					var activeTabMessage = hsMessage.create(hsMsgType.KEY, activeTabId);
 					activeTabMessage.setParameter("press", [key]);
-					log("msg sent is :"+activeTabMessage.toXMLString())
+					//log("msg sent is :"+activeTabMessage.toXMLString())
 					transport.send(activeTabMessage.toXMLString());
 				}
 
@@ -249,10 +249,9 @@ var listener =
 		},
 		onClick : /*void*/function(/*[hsMouseHandler]*/ mouse, /*[Node]*/ clicked_node, /*[String]*/ button)
 		{
-			log("onClick start point");
 			log(" onClick message sent!"+ button);
 			var activeTabId =  getTabId(gBrowser.getBrowserForTab(gBrowser.selectedTab));
-	
+
 			var nodeId = activeTabBrowserHandler.getNodeId(clicked_node);
 			log("Node Id of clicked node is : " + nodeId);
 			if(nodeId != null && activeTabId != null)
@@ -260,10 +259,9 @@ var listener =
 				log("onClick message sent!");
 				var activeTabMessage = hsMessage.create(hsMsgType.MOUSE, activeTabId);
 				activeTabMessage.setParameter("id", [nodeId]);
-				log("msg sent is :"+activeTabMessage.toXMLString());
+				//log("msg sent is :"+activeTabMessage.toXMLString());
 				var nodeBeingClicked = activeTabBrowserHandler.getNode(nodeId);
 				transport.send(activeTabMessage.toXMLString());
-				//log("onClick message sent!"+ msg.toXMLString());
 			}
 		},
 		// DOM events observer
@@ -279,7 +277,7 @@ var listener =
 				var initDOMMessage = hsMessage.create(hsMsgType.INIT_DOM, tabId);
 				initDOMMessage.setParameter("URL", [handler.getBrowser().contentDocument.URL]);
 				initDOMMessage.setPayload(xml_dom);
-				log(initDOMMessage.toXMLString());
+				//log(initDOMMessage.toXMLString());
 				transport.send(initDOMMessage.toXMLString());
 			}
 		},
@@ -296,7 +294,7 @@ function onLoad()
 	transport = hsCreateTransport("localhost", /*port*/13000, /*TransportListener*/listener);
 }
 
-// do not forget to release all resources!
+//do not forget to release all resources!
 function onUnload()
 {
 	window.removeEventListener("unload", onUnload, false);
@@ -307,5 +305,5 @@ function onUnload()
 	tts.release();
 }
 
-// TODO: add gBrowser event listeners
+//TODO: add gBrowser event listeners
 window.addEventListener("load", onLoad, false);
