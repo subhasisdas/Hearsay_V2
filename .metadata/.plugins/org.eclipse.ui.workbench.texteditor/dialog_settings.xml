@@ -13,16 +13,16 @@
 		<item value="false" key="isRegEx"/>
 		<item value="false" key="incremental"/>
 		<item value="false" key="wholeword"/>
-		<item value="" key="selection"/>
+		<item value="onReceive" key="selection"/>
 		<list key="findhistory">
+			<item value="onreceive"/>
+			<item value="log"/>
+			<item value="activate"/>
+			<item value="onconnect"/>
+			<item value="release"/>
+			<item value="accept"/>
 			<item value="line"/>
 			<item value="getId"/>
-			<item value="log"/>
-			<item value="TTS_DONE"/>
-			<item value="TTS_SPEAK"/>
-			<item value="KEY"/>
-			<item value="pauseMode"/>
-			<item value="Time to stop tts"/>
 		</list>
 		<list key="replacehistory">
 			<item value="this."/>
