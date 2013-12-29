@@ -1,4 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<session version="1.0">
-<refactoring comment="Rename field &apos;isFalse&apos; in &apos;server.TabHandler&apos; to &apos;pauseMode&apos;&#x0D;&#x0A;- Original project: &apos;Hearsay&apos;&#x0D;&#x0A;- Original element: &apos;server.TabHandler.isFalse&apos;&#x0D;&#x0A;- Renamed element: &apos;server.TabHandler.pauseMode&apos;&#x0D;&#x0A;- Update references to refactored element&#x0D;&#x0A;- Update textual occurrences in comments and strings" delegate="false" deprecate="false" description="Rename field &apos;isFalse&apos;" flags="589826" getter="false" id="org.eclipse.jdt.ui.rename.field" input="/src&lt;server{TabHandler.java[TabHandler^isFalse" name="pauseMode" references="true" setter="false" stamp="1387664254084" textual="false" version="1.0"/>
-</session>
